@@ -53,7 +53,9 @@ public class Clazz {
         inverseJoinColumns = @JoinColumn(name = "student_id")
     )
     private List<Student> students;
-
+    public Clazz() {
+        this.students = new ArrayList<>(); // Khởi tạo để tránh NullPointerException
+    }
     public Clazz(Course course, String credit, String time, String startTime, String endTime,
                  String dayOfWeek, String weeks, String room, int maxCapacity, int registeredCount,
                  Teacher teacher, List<Student> students) {
