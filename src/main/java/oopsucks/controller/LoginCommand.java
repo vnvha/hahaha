@@ -1,15 +1,15 @@
 package oopsucks.controller;
-
 import oopsucks.model.*;
+
 public class LoginCommand implements Command {
     private UserDAO userDAO;
-    private String account_name;
+    private String username;
     private String password;
     private Role role;
 
-    public LoginCommand(String account_name, String password, Role role) {
+    public LoginCommand(String username, String password, Role role) {
         this.userDAO = new UserDAO();
-        this.account_name = account_name;
+        this.username = username;
         this.password = password;
         this.role = role;
     }
@@ -22,16 +22,14 @@ public class LoginCommand implements Command {
 
         User user = null;
         if (role == Role.TEACHER) {
-            user = userDAO.getTeacher(account_name);
+            user = userDAO.getTeacher(username);
         } else if (role == Role.CREDITBASEDSTUDENT || role == Role.YEARBASEDSTUDENT) {
-            user = userDAO.getStudent(account_name);
+            user = userDAO.getStudent(username);
             if (user != null && user.getRole() != role) {
-                user = null; // Đảm bảo vai trò khớp
+                user = null; 
             }
         }
 
         return user != null && user.getPassword().equals(password);
     }
-    
-    
 }

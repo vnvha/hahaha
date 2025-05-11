@@ -42,7 +42,7 @@ public class Clazz {
     @Column(name = "registered_count", nullable = false)
     private Integer registeredCount;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "teacher_id")
     private Teacher teacher;
 

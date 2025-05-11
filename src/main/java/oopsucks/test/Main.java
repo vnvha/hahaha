@@ -1,13 +1,29 @@
 package oopsucks.test;
 
-import oopsucks.view.*;
+import oopsucks.view.LoginPanel;
+
 import javax.swing.*;
+import java.awt.*;
 
 public class Main {
-	 public static void main(String[] args) {
-	        SwingUtilities.invokeLater(() -> {
-	        	MainPanel panel = new MainPanel();
-	            panel.setVisible(true);
-	        });
-	    }
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Class Management");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setSize(1000, 600);
+            frame.setLocationRelativeTo(null);
+
+            CardLayout cardLayout = new CardLayout();
+            JPanel cardPanel = new JPanel(cardLayout);
+
+            LoginPanel loginPanel = new LoginPanel(cardPanel, cardLayout);
+            cardPanel.add(loginPanel, "Login");
+
+            frame.add(cardPanel);
+
+            cardLayout.show(cardPanel, "Login");
+
+            frame.setVisible(true);
+        });
+    }
 }

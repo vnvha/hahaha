@@ -7,10 +7,10 @@ import jakarta.persistence.*;
 @Inheritance(strategy = InheritanceType.JOINED)
 public abstract class Student extends User {
 
-    @Column(name = "major", nullable = false)
+    @Column(name = "major")
     private String major;
 
-    @Column(name = "faculty", nullable = false)
+    @Column(name = "faculty")
     private String faculty;
 
     public Student() {

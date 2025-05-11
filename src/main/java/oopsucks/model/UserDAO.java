@@ -9,6 +9,7 @@ public class UserDAO {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
+            session.merge(teacher);  // Thay vì saveOrUpdate
             transaction.commit();
         } catch (Exception e) {
             if (transaction != null) transaction.rollback();
@@ -20,6 +21,7 @@ public class UserDAO {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
+            session.merge(student); 
             transaction.commit();
         } catch (Exception e) {
             if (transaction != null) transaction.rollback();
@@ -30,7 +32,7 @@ public class UserDAO {
     public Teacher getTeacher(String accountName) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             return session
-                .createQuery("FROM Teacher WHERE account_name = :account", Teacher.class)
+                .createQuery("FROM Teacher WHERE accountName = :account", Teacher.class)
                 .setParameter("account", accountName)
                 .uniqueResult();
         } catch (Exception e) {
@@ -42,7 +44,7 @@ public class UserDAO {
     public Student getStudent(String accountName) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             return session
-                .createQuery("FROM Student WHERE account_name = :account", Student.class)
+                .createQuery("FROM Student WHERE accountName = :account", Student.class)
                 .setParameter("account", accountName)
                 .uniqueResult();
         } catch (Exception e) {
