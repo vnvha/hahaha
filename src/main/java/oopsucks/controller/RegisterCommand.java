@@ -43,12 +43,10 @@ public class RegisterCommand {
                 return "Class ID " + clazzID + " not found!";
             }
 
-            // Kiểm tra trùng clazzID
             if (registeredClasses.stream().anyMatch(c -> c.getClazzID() == clazzID)) {
                 return "Lớp ID: " + clazzID + " đã được đăng ký trước đó!";
             }
 
-            // Kiểm tra trùng courseID (bất kể time)
             for (Clazz registered : registeredClasses) {
                 if (registered.getCourse() != null && clazz.getCourse() != null &&
                     registered.getCourse().getCourseID().equals(clazz.getCourse().getCourseID())) {
@@ -56,12 +54,11 @@ public class RegisterCommand {
                 }
             }
 
-            // Kiểm tra sĩ số lớp
             if (clazz.getRegisteredCount() >= clazz.getMaxCapacity()) {
                 return "Không thể đăng ký: Lớp " + clazzID + " đã đạt số lượng sinh viên tối đa!";
             }
 
-            // Đăng ký thành công
+            // Đk thành công
             registeredClasses.add(clazz);
             return "Đăng ký lớp ID: " + clazzID + " thành công!";
         } catch (Exception e) {
@@ -95,7 +92,6 @@ public class RegisterCommand {
         return registeredClasses;
     }
     
-    // Phương thức finishRegistration đã cập nhật để xử lý lazy loading
     public String finishRegistration() {
         Transaction transaction = null;
         Session session = null;
@@ -129,7 +125,7 @@ public class RegisterCommand {
                 Clazz clazz = session.get(Clazz.class, tempClazz.getClazzID());
                 
                 // Lấy danh sách sinh viên trong cùng session và kiểm tra xem sinh viên đã tồn tại chưa
-                List<Student> students = clazz.getStudents(); // An khi lazy loading trong cùng session
+                List<Student> students = clazz.getStudents(); 
                 
                 boolean studentExists = false;
                 for (Student s : students) {
@@ -149,7 +145,6 @@ public class RegisterCommand {
                 }
             }
             
-            // Commit transaction
             transaction.commit();
             
             // Xóa danh sách đăng ký tạm thời sau khi đã lưu vào database
