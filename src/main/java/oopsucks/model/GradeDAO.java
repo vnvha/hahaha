@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GradeDAO {
+	
     public Grade getGradeByStudentAndClazz(Student student, Clazz clazz) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             return session.createQuery(
@@ -23,14 +24,31 @@ public class GradeDAO {
 
     public List<Grade> getGradesByClazz(Clazz clazz) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            return session.createQuery(
-                    "FROM Grade WHERE clazz.clazzID = :clazzId",
+            List<Grade> grades = session.createQuery(
+                    "FROM Grade g LEFT JOIN FETCH g.student WHERE g.clazz.clazzID = :clazzId",
                     Grade.class)
                     .setParameter("clazzId", clazz.getClazzID())
                     .list();
+            System.out.println("Số lượng Grade tìm thấy cho clazzID " + clazz.getClazzID() + ": " + grades.size());
+            return grades;
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
+        }
+    }
+    public Grade getGradeByStudentAndClazz2(String studentId, Integer clazzId) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Grade grade = session.createQuery(
+                    "FROM Grade WHERE student.id = :studentId AND clazz.clazzID = :clazzId",
+                    Grade.class)
+                    .setParameter("studentId", studentId)
+                    .setParameter("clazzId", clazzId)
+                    .uniqueResult();
+            System.out.println("Tìm Grade cho studentId=" + studentId + ", clazzId=" + clazzId + ": " + (grade != null ? "Tìm thấy" : "Không tìm thấy"));
+            return grade;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 

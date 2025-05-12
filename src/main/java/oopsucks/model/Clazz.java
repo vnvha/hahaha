@@ -14,9 +14,10 @@ public class Clazz {
     @Column(name = "clazz_id", nullable = false, unique = true)
     private Integer clazzID;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id", nullable = false)
-    private Course course;
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "course_id", nullable = false)
+	private Course course;
+
 
     @Column(name = "time", nullable = false)
     private String time;

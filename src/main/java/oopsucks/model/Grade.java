@@ -14,11 +14,11 @@ public class Grade {
     @Column(name = "grade_id", nullable = false, unique = true)
     private Long gradeID;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "clazz_id", nullable = false)
     private Clazz clazz;
 
@@ -98,8 +98,10 @@ public class Grade {
             return null;
         }
         float finalExamWeight = clazz.getCourse().getFinalExamWeight();
-        return midtermScore * (1 - finalExamWeight) + finalScore * finalExamWeight;
+        float result = midtermScore * (1 - finalExamWeight) + finalScore * finalExamWeight;
+        return Math.round(result * 100) / 100f; 
     }
+
 
  
     private String calculateLetterGrade() {

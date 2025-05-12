@@ -17,7 +17,7 @@ public abstract class User {
     @Column(name = "dob", nullable = false)
     private String dob;
 
-    @Column(name = "account_name", nullable = false)
+    @Column(name = "account_name", nullable = false, unique = true)
     private String accountName;
 
     @Column(name = "password", nullable = false)

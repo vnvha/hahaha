@@ -48,7 +48,7 @@ public class ClassRegistrationPanel extends JPanel {
         topLabel.setFont(new Font("Arial", Font.BOLD, 20));
         topPanel.add(topLabel, BorderLayout.NORTH);
 
-        String[] columns = {"ID", "Môn học", "Thời gian", "Thứ", "Phòng", "Sĩ số tối đa", "Đã đăng ký"};
+        String[] columns = {"ID", "Môn học", "Bắt đầu", "Kết thúc", "Thứ", "Phòng", "Sĩ số tối đa", "Đã đăng ký"};
         DefaultTableModel availableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -83,7 +83,7 @@ public class ClassRegistrationPanel extends JPanel {
         bottomLabel.setFont(new Font("Arial", Font.BOLD, 20));
         bottomPanel.add(bottomLabel, BorderLayout.NORTH);
 
-        String[] regColumns = {"Chọn", "ID", "Môn học", "Thời gian", "Thứ", "Phòng"};
+        String[] regColumns = {"Chọn", "ID", "Môn học", "Bắt đầu", "Kết thúc", "Thứ", "Phòng"};
         DefaultTableModel registeredModel = new DefaultTableModel(regColumns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -143,7 +143,8 @@ public class ClassRegistrationPanel extends JPanel {
             model.addRow(new Object[]{
                 clazz.getClazzID(),
                 clazz.getCourse() != null ? clazz.getCourse().getCourseID() : "N/A",
-                clazz.getTime(),
+                clazz.getStartTime(),
+                clazz.getEndTime(),
                 clazz.getDayOfWeek(),
                 clazz.getRoom(),
                 clazz.getMaxCapacity(),
@@ -161,7 +162,8 @@ public class ClassRegistrationPanel extends JPanel {
                 false,
                 clazz.getClazzID(),
                 clazz.getCourse() != null ? clazz.getCourse().getCourseID() : "N/A",
-                clazz.getTime(),
+                clazz.getStartTime(),
+                clazz.getEndTime(),
                 clazz.getDayOfWeek(),
                 clazz.getRoom()
             });
@@ -208,7 +210,6 @@ public class ClassRegistrationPanel extends JPanel {
     }
 
     private void finishRegistration() {
-
         SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
             protected String doInBackground() {
@@ -233,7 +234,6 @@ public class ClassRegistrationPanel extends JPanel {
                 }
             }
         };
-
         worker.execute();
     }
 

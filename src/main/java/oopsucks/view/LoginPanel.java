@@ -121,7 +121,6 @@ public class LoginPanel extends JPanel {
 
             Command loginCommand = new LoginCommand(username, password, role);
             if (loginCommand.execute()) {
-                errorLabel.setText("Đăng nhập thành công!");
                 switch (role) {
                     case CREDITBASEDSTUDENT:
                         cardPanel.add(new CreditBasedStudentPanel(username, cardPanel, cardLayout), "CreditBasedStudent");

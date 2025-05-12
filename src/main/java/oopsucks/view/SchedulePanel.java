@@ -19,6 +19,7 @@ public class SchedulePanel extends JPanel {
     private JPanel cardPanel;
     private CardLayout cardLayout;
     private JLabel messageLabel;
+    private int done = 1;
 
     public SchedulePanel(String accountName, JPanel cardPanel, CardLayout cardLayout) {
         this.accountName = accountName;
@@ -30,8 +31,13 @@ public class SchedulePanel extends JPanel {
         setBackground(Color.WHITE);
         initializeUI();
     }
+    
+    public int getDone() {return done;}
+	public void setDone(int done) {this.done = done;}
 
-    private void initializeUI() {
+
+
+	private void initializeUI() {
         messageLabel = new JLabel(" ");
         messageLabel.setFont(new Font("Arial", Font.BOLD, 14));
         messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
