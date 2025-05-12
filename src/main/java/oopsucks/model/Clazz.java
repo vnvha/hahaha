@@ -47,7 +47,7 @@ public class Clazz {
     @JoinColumn(name = "teacher_id")
     private Teacher teacher;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "clazz_student",
         joinColumns = @JoinColumn(name = "clazz_id"),

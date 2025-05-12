@@ -1,8 +1,7 @@
 package oopsucks.view;
 
-import oopsucks.model.Clazz;
-import oopsucks.model.ClazzDAO;
-import oopsucks.controller.RegisterCommand;
+import oopsucks.model.*;
+import oopsucks.controller.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -12,7 +11,10 @@ import java.util.List;
 public class ClassRegistrationPanel extends JPanel {
     private JTable availableClassesTable;
     private JTable registeredClassesTable;
-    private RegisterCommand registerCommand;
+    private RegisterClassCommand registerClassCommand;
+    private DeleteClassCommand deleteClassCommand;
+    private GetRegisteredClassesCommand getRegisteredClassesCommand;
+    private FinishRegistrationCommand finishRegistrationCommand;
     private ClazzDAO clazzDAO;
     private JPanel cardPanel;
     private CardLayout cardLayout;
@@ -25,7 +27,10 @@ public class ClassRegistrationPanel extends JPanel {
         this.cardPanel = cardPanel;
         this.cardLayout = cardLayout;
         this.clazzDAO = new ClazzDAO();
-        this.registerCommand = new RegisterCommand(accountName);
+        this.registerClassCommand = new RegisterClassCommand(accountName);
+        this.deleteClassCommand = new DeleteClassCommand(accountName);
+        this.getRegisteredClassesCommand = new GetRegisteredClassesCommand(accountName);
+        this.finishRegistrationCommand = new FinishRegistrationCommand(accountName);
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
         initializeUI();
@@ -118,6 +123,7 @@ public class ClassRegistrationPanel extends JPanel {
 
         bottomPanel.add(buttonPanel, BorderLayout.SOUTH);
 
+        // Thêm nút "Quay lại"
         JButton backButton = new JButton("Quay lại");
         backButton.setFont(new Font("Arial", Font.BOLD, 16));
         backButton.setBackground(new Color(70, 130, 180));
@@ -156,7 +162,7 @@ public class ClassRegistrationPanel extends JPanel {
     private void populateRegisteredClasses() {
         DefaultTableModel model = (DefaultTableModel) registeredClassesTable.getModel();
         model.setRowCount(0);
-        List<Clazz> registeredClasses = registerCommand.getRegisteredClasses();
+        List<Clazz> registeredClasses = getRegisteredClassesCommand.execute();
         for (Clazz clazz : registeredClasses) {
             model.addRow(new Object[]{
                 false,
@@ -178,10 +184,11 @@ public class ClassRegistrationPanel extends JPanel {
                 return;
             }
             Integer clazzID = Integer.parseInt(input);
-            String result = registerCommand.execute(clazzID);
+            String result = registerClassCommand.execute(clazzID);
             if (result.contains("thành công")) {
                 showMessage(result, new Color(0, 128, 0));
                 populateRegisteredClasses();
+                populateAvailableClasses();
                 clazzIdField.setText("");
             } else {
                 showMessage(result, Color.RED);
@@ -198,8 +205,8 @@ public class ClassRegistrationPanel extends JPanel {
             Boolean isSelected = (Boolean) model.getValueAt(i, 0);
             if (Boolean.TRUE.equals(isSelected)) {
                 Integer clazzID = Integer.parseInt(model.getValueAt(i, 1).toString());
-                String result = registerCommand.delete(clazzID);
-                showMessage(result, Color.RED);
+                String result = deleteClassCommand.execute(clazzID);
+                showMessage(result, result.contains("thành công") ? new Color(0, 128, 0) : Color.RED);
                 found = true;
             }
         }
@@ -207,13 +214,14 @@ public class ClassRegistrationPanel extends JPanel {
             showMessage("Vui lòng chọn lớp để xóa.", Color.RED);
         }
         populateRegisteredClasses();
+        populateAvailableClasses();
     }
 
     private void finishRegistration() {
         SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
             protected String doInBackground() {
-                return registerCommand.finishRegistration();
+                return finishRegistrationCommand.execute();
             }
 
             @Override
@@ -222,7 +230,6 @@ public class ClassRegistrationPanel extends JPanel {
                     String result = get();
                     if (result.contains("thành công")) {
                         showMessage(result, new Color(0, 128, 0));
-                        populateAvailableClasses();
                         populateRegisteredClasses();
                         cardLayout.show(cardPanel, "CreditBasedStudent");
                     } else {

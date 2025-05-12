@@ -19,7 +19,6 @@ public class SchedulePanel extends JPanel {
     private JPanel cardPanel;
     private CardLayout cardLayout;
     private JLabel messageLabel;
-    private int done = 1;
 
     public SchedulePanel(String accountName, JPanel cardPanel, CardLayout cardLayout) {
         this.accountName = accountName;
@@ -32,10 +31,6 @@ public class SchedulePanel extends JPanel {
         initializeUI();
     }
     
-    public int getDone() {return done;}
-	public void setDone(int done) {this.done = done;}
-
-
 
 	private void initializeUI() {
         messageLabel = new JLabel(" ");
@@ -104,7 +99,7 @@ public class SchedulePanel extends JPanel {
                 String teacherName = clazz.getTeacher() != null ? clazz.getTeacher().getUserName() : "N/A";
                 model.addRow(new Object[]{
                     clazz.getClazzID(),
-                    clazz.getCourse() != null ? clazz.getCourse().getCourseID() : "N/A",
+                    clazz.getCourse() != null ? clazz.getCourse().getCourseName() : "N/A",
                     clazz.getTime(),
                     clazz.getDayOfWeek(),
                     clazz.getRoom(),

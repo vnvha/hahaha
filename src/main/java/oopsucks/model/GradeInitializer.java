@@ -1,7 +1,5 @@
 package oopsucks.model;
 
-import org.hibernate.Hibernate;
-
 public class GradeInitializer {
     private GradeDAO gradeDAO;
 
@@ -10,18 +8,14 @@ public class GradeInitializer {
     }
 
     public void initializeGrade(Student student, Clazz clazz) {
-        try {
-            Grade grade = new Grade();
-            grade.setStudent(student);
-            grade.setClazz(clazz);
-            grade.setMidtermScore(null);
-            grade.setFinalScore(null);
-
-            Hibernate.initialize(clazz.getCourse());
-
+        Grade existingGrade = gradeDAO.getGradeByStudentAndClazz(student, clazz);
+        if (existingGrade == null) {
+            Grade grade = new Grade(student, clazz, null, null); // Tạo mới với điểm mặc định null
             gradeDAO.saveGrade(grade);
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi khởi tạo Grade: " + e.getMessage(), e);
+            System.out.println("Created new Grade for student " + student.getUserID() + " in clazz " + clazz.getClazzID());
+        } else {
+            // Không làm gì nếu Grade đã tồn tại, giữ nguyên dữ liệu điểm hiện có
+            System.out.println("Grade already exists for student " + student.getUserID() + " in clazz " + clazz.getClazzID() + ", no changes made.");
         }
     }
 }

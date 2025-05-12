@@ -53,6 +53,7 @@ public class Grade {
         this.clazz = clazz;
         setMidtermScore(midtermScore);
         setFinalScore(finalScore);
+        updateTotalScoreAndGrades();
     }
 
 
@@ -126,6 +127,7 @@ public class Grade {
         }
         return switch (letterGrade) {
             case "A+" -> 4.0f;
+            case "A" -> 4.0f;
             case "B+" -> 3.5f;
             case "B" -> 3.0f;
             case "C+" -> 2.5f;

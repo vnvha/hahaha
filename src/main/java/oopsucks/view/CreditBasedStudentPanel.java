@@ -1,13 +1,12 @@
 package oopsucks.view;
 
-import oopsucks.model.CreditBasedStudent;
-import oopsucks.model.Student;
-import oopsucks.model.UserDAO;
-
+import oopsucks.model.*;
 import javax.swing.*;
 import java.awt.*;
 
 public class CreditBasedStudentPanel extends JPanel {
+    private JLabel notificationLabel;
+
     public CreditBasedStudentPanel(String accountName, JPanel cardPanel, CardLayout cardLayout) {
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
@@ -38,19 +37,25 @@ public class CreditBasedStudentPanel extends JPanel {
         trainingProgramButton.setMaximumSize(new Dimension(250, 40));
         timetableButton.setMaximumSize(new Dimension(250, 40));
 
-        // Add action listeners (placeholder functionality)
         registerClassButton.addActionListener(e -> {
-            cardPanel.add(new ClassRegistrationPanel(accountName, cardPanel, cardLayout), "ClassRegistration");
-            cardLayout.show(cardPanel, "ClassRegistration");
+            if (RegistrationManager.getRegisterStatus()) {
+                cardPanel.add(new ClassRegistrationPanel(accountName, cardPanel, cardLayout), "ClassRegistration");
+                cardLayout.show(cardPanel, "ClassRegistration");
+            } else {
+                showNotification("Hiện thông phải thời gian đăng ký lớp học");
+            }
         });
+
         timetableButton.addActionListener(e -> {
-            cardPanel.add(new SchedulePanel( accountName,  cardPanel,  cardLayout), "Schedule");
+            cardPanel.add(new SchedulePanel(accountName, cardPanel, cardLayout), "Schedule");
             cardLayout.show(cardPanel, "Schedule");
         });
-        trainingProgramButton.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Chức năng Thời khóa biểu đang được phát triển!");
-        });
         
+        trainingProgramButton.addActionListener(e -> {
+            cardPanel.add(new TrainingProgramPanel(accountName, cardPanel, cardLayout), "trainingProgram");
+            cardLayout.show(cardPanel, "trainingProgram");
+        });
+
         buttonPanel.add(registerClassButton);
         buttonPanel.add(Box.createVerticalStrut(10));
         buttonPanel.add(trainingProgramButton);
@@ -121,21 +126,39 @@ public class CreditBasedStudentPanel extends JPanel {
             infoPanel.add(errorLabel, gbc);
         }
 
-        // Add info panel to the CENTER
         add(infoPanel, BorderLayout.CENTER);
 
-        // Logout button
+        // Bottom panel with notification and logout
         JButton logoutButton = new JButton("Đăng xuất");
         logoutButton.setFont(new Font("Arial", Font.BOLD, 18));
         logoutButton.setBackground(new Color(70, 130, 180));
         logoutButton.setForeground(Color.WHITE);
+
+        notificationLabel = new JLabel("");
+        notificationLabel.setFont(new Font("Arial", Font.ITALIC, 14));
+        notificationLabel.setForeground(Color.RED);
+        notificationLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         JPanel logoutPanel = new JPanel();
         logoutPanel.setBackground(Color.WHITE);
+        logoutPanel.setLayout(new BoxLayout(logoutPanel, BoxLayout.Y_AXIS));
+        logoutPanel.add(notificationLabel);
+        logoutPanel.add(Box.createVerticalStrut(5));
         logoutPanel.add(logoutButton);
+
         add(logoutPanel, BorderLayout.SOUTH);
 
         logoutButton.addActionListener(e -> {
             cardLayout.show(cardPanel, "Login");
         });
+    }
+
+    private void showNotification(String message) {
+        notificationLabel.setText(message);
+
+        // Tự động ẩn sau 3 giây
+        Timer timer = new Timer(3000, e -> notificationLabel.setText(""));
+        timer.setRepeats(false);
+        timer.start();
     }
 }

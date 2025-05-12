@@ -10,7 +10,7 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Class Management");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(1000, 600);
+            frame.setSize(1200, 700);
             frame.setLocationRelativeTo(null);
 
             CardLayout cardLayout = new CardLayout();
