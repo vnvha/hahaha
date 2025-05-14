@@ -35,10 +35,45 @@ public class TeacherPanel extends JPanel {
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setForeground(Color.BLUE);
 
+        // Panel chứa thông tin giáo viên
+        JPanel teacherInfoPanel = new JPanel();
+        teacherInfoPanel.setLayout(new BoxLayout(teacherInfoPanel, BoxLayout.Y_AXIS));
+        teacherInfoPanel.setBackground(new Color(240, 248, 255)); // Light blue background
+        teacherInfoPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Lấy thông tin giáo viên
+        Teacher teacher = userDAO.getTeacher(username);
+        if (teacher != null) {
+            JLabel nameLabel = new JLabel("Tên giáo viên: " + teacher.getUserName());
+            nameLabel.setFont(new Font("Arial", Font.BOLD, 16));
+            nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
+            JLabel idLabel = new JLabel("ID: " + teacher.getUserID());
+            idLabel.setFont(new Font("Arial", Font.BOLD, 16));
+            idLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
+            JLabel dobLabel = new JLabel("Ngày sinh: " + teacher.getDob());
+            dobLabel.setFont(new Font("Arial", Font.BOLD, 16));
+            dobLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
+            teacherInfoPanel.add(nameLabel);
+            teacherInfoPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+            teacherInfoPanel.add(idLabel);
+            teacherInfoPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+            teacherInfoPanel.add(dobLabel);
+        } else {
+            JLabel errorLabel = new JLabel("Không tìm thấy thông tin giáo viên!");
+            errorLabel.setFont(new Font("Arial", Font.ITALIC, 16));
+            errorLabel.setForeground(Color.RED);
+            errorLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            teacherInfoPanel.add(errorLabel);
+        }
+
         // Ô nhập kỳ học và nút hiển thị
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(Color.WHITE);
         topPanel.add(titleLabel, BorderLayout.NORTH);
+        topPanel.add(teacherInfoPanel, BorderLayout.CENTER);
 
         JPanel semesterPanel = new JPanel();
         semesterPanel.setBackground(Color.WHITE);
@@ -55,7 +90,7 @@ public class TeacherPanel extends JPanel {
         semesterPanel.add(semesterLabel);
         semesterPanel.add(semesterField);
         semesterPanel.add(showClassesButton);
-        topPanel.add(semesterPanel, BorderLayout.CENTER);
+        topPanel.add(semesterPanel, BorderLayout.SOUTH);
 
         add(topPanel, BorderLayout.NORTH);
 
@@ -74,7 +109,6 @@ public class TeacherPanel extends JPanel {
         buttonPanel.setBackground(Color.WHITE);
 
         // Kiểm tra xem giảng viên có phải là admin không
-        Teacher teacher = userDAO.getTeacher(username);
         if (teacher == null) {
             JOptionPane.showMessageDialog(this, "Không tìm thấy thông tin giáo viên!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;

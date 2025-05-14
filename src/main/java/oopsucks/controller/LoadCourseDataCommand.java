@@ -62,17 +62,17 @@ public class LoadCourseDataCommand {
 
             // Nếu có Grade hợp lệ, điền thông tin điểm
             if (bestGrade != null) {
-                rowData[4] = panel.formatGrade(bestGrade.getMidtermScore()); // Điểm quá trình
-                rowData[5] = panel.formatGrade(bestGrade.getFinalScore()); // Điểm cuối kỳ
-                rowData[6] = panel.formatGrade(bestGrade.getTotalScore()); // Điểm tổng kết
-                rowData[7] = bestGrade.getLetterGrade(); // Điểm chữ
-                rowData[8] = panel.formatGrade(bestGrade.getGradePoint()); // Điểm hệ 4
+                rowData[4] = panel.formatGrade(bestGrade.getMidtermScore()); 
+                rowData[5] = panel.formatGrade(bestGrade.getFinalScore()); 
+                rowData[6] = panel.formatGrade(bestGrade.getTotalScore()); 
+                rowData[7] = bestGrade.getLetterGrade(); 
+                rowData[8] = panel.formatGrade(bestGrade.getGradePoint());
             } else {
-                rowData[4] = ""; // Điểm quá trình
-                rowData[5] = ""; // Điểm cuối kỳ
-                rowData[6] = ""; // Điểm tổng kết
-                rowData[7] = ""; // Điểm chữ
-                rowData[8] = ""; // Điểm hệ 4
+                rowData[4] = ""; // ĐQT
+                rowData[5] = ""; // ĐCK
+                rowData[6] = ""; // tổng kết
+                rowData[7] = ""; // chữ
+                rowData[8] = ""; // hệ 4
             }
 
             rowData[9] = course.isMandatory();
