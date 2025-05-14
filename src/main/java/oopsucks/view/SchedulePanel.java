@@ -19,6 +19,7 @@ public class SchedulePanel extends JPanel {
     private JPanel cardPanel;
     private CardLayout cardLayout;
     private JLabel messageLabel;
+    private JTextField semesterField;
 
     public SchedulePanel(String accountName, JPanel cardPanel, CardLayout cardLayout) {
         this.accountName = accountName;
@@ -30,18 +31,38 @@ public class SchedulePanel extends JPanel {
         setBackground(Color.WHITE);
         initializeUI();
     }
-    
 
-	private void initializeUI() {
+    private void initializeUI() {
         messageLabel = new JLabel(" ");
         messageLabel.setFont(new Font("Arial", Font.BOLD, 14));
         messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         messageLabel.setForeground(Color.RED);
         add(messageLabel, BorderLayout.NORTH);
 
+        // Tiêu đề và ô nhập kỳ học
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(Color.WHITE);
         JLabel titleLabel = new JLabel("Lịch học của bạn", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        add(titleLabel, BorderLayout.NORTH);
+        topPanel.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel semesterPanel = new JPanel();
+        semesterPanel.setBackground(Color.WHITE);
+        JLabel semesterLabel = new JLabel("Nhập kỳ học:");
+        semesterLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        semesterField = new JTextField(5);
+        semesterField.setFont(new Font("Arial", Font.PLAIN, 16));
+        JButton showScheduleButton = new JButton("Xem chi tiết");
+        showScheduleButton.setFont(new Font("Arial", Font.BOLD, 16));
+        showScheduleButton.setBackground(new Color(70, 130, 180));
+        showScheduleButton.setForeground(Color.WHITE);
+        showScheduleButton.addActionListener(e -> populateSchedule());
+        semesterPanel.add(semesterLabel);
+        semesterPanel.add(semesterField);
+        semesterPanel.add(showScheduleButton);
+        topPanel.add(semesterPanel, BorderLayout.CENTER);
+
+        add(topPanel, BorderLayout.NORTH);
 
         String[] columns = {"ID", "Môn học", "Thời gian", "Thứ", "Phòng", "Giảng viên", "Chi tiết"};
         DefaultTableModel scheduleModel = new DefaultTableModel(columns, 0) {
@@ -74,15 +95,20 @@ public class SchedulePanel extends JPanel {
         backPanel.setBackground(Color.WHITE);
         backPanel.add(backButton);
         add(backPanel, BorderLayout.SOUTH);
-
-        populateSchedule();
     }
 
     private void populateSchedule() {
         DefaultTableModel model = (DefaultTableModel) scheduleTable.getModel();
         model.setRowCount(0);
 
+        String semesterInput = semesterField.getText().trim();
+        if (semesterInput.isEmpty()) {
+            showMessage("Vui lòng nhập kỳ học!", Color.RED);
+            return;
+        }
+
         try {
+            int semester = Integer.parseInt(semesterInput);
             Student student = userDAO.getStudent(accountName);
             if (student == null) {
                 showMessage("Không tìm thấy thông tin sinh viên!", Color.RED);
@@ -90,23 +116,30 @@ public class SchedulePanel extends JPanel {
             }
 
             List<Clazz> classes = clazzDAO.getClazzesByStudent(student);
-            if (classes.isEmpty()) {
-                showMessage("Bạn chưa đăng ký lớp học nào!", Color.RED);
-                return;
+            boolean hasClasses = false;
+            for (Clazz clazz : classes) {
+                if (clazz.getSemester() == semester) {
+                    String teacherName = clazz.getTeacher() != null ? clazz.getTeacher().getUserName() : "N/A";
+                    model.addRow(new Object[]{
+                        clazz.getClazzID(),
+                        clazz.getCourse() != null ? clazz.getCourse().getCourseName() : "N/A",
+                        clazz.getTime(),
+                        clazz.getDayOfWeek(),
+                        clazz.getRoom(),
+                        teacherName,
+                        "Xem chi tiết"
+                    });
+                    hasClasses = true;
+                }
             }
 
-            for (Clazz clazz : classes) {
-                String teacherName = clazz.getTeacher() != null ? clazz.getTeacher().getUserName() : "N/A";
-                model.addRow(new Object[]{
-                    clazz.getClazzID(),
-                    clazz.getCourse() != null ? clazz.getCourse().getCourseName() : "N/A",
-                    clazz.getTime(),
-                    clazz.getDayOfWeek(),
-                    clazz.getRoom(),
-                    teacherName,
-                    "Xem chi tiết"
-                });
+            if (!hasClasses) {
+                showMessage("Không tìm thấy lớp học nào cho kỳ " + semester + "!", Color.RED);
+            } else {
+                showMessage("Đã hiển thị lịch học cho kỳ " + semester + "!", new Color(0, 128, 0));
             }
+        } catch (NumberFormatException e) {
+            showMessage("Kỳ học phải là số nguyên!", Color.RED);
         } catch (Exception e) {
             e.printStackTrace();
             showMessage("Lỗi khi tải lịch học: " + e.getMessage(), Color.RED);

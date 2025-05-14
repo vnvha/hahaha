@@ -42,6 +42,9 @@ public class Clazz {
 
     @Column(name = "registered_count", nullable = false)
     private Integer registeredCount;
+    
+    @Column(name = "semester")
+    private int semester;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "teacher_id")
@@ -99,4 +102,7 @@ public class Clazz {
     public void setTeacher(Teacher teacher) { this.teacher = teacher; }
     public void setStudents(List<Student> students) { this.students = students != null ? students : new ArrayList<>(); }
 
+    public void setSemester(int semester) { this.semester = semester; }
+    public int getSemester() { return semester; }
+    
 }

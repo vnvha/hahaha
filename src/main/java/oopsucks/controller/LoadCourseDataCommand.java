@@ -40,21 +40,39 @@ public class LoadCourseDataCommand {
         for (Course course : allCourses) {
             Object[] rowData = new Object[10];
 
+            // Điền thông tin cơ bản của Course
             rowData[0] = course.getCourseID();
             rowData[1] = course.getCourseName();
             rowData[2] = course.getCreditNumber();
             rowData[3] = course.getInstitute();
 
-            Clazz registeredClazz = panel.findRegisteredClazz(student, course);
-            if (registeredClazz != null) {
-                Grade grade = gradeDAO.getGradeByStudentAndClazz(student, registeredClazz);
-                if (grade != null) {
-                    rowData[4] = panel.formatGrade(grade.getMidtermScore());
-                    rowData[5] = panel.formatGrade(grade.getFinalScore());
-                    rowData[6] = panel.formatGrade(grade.getTotalScore());
-                    rowData[7] = grade.getLetterGrade();
-                    rowData[8] = panel.formatGrade(grade.getGradePoint());
+            // Lấy tất cả các Grade cho sinh viên và khóa học
+            List<Grade> grades = gradeDAO.getGradesByStudentAndCourse(student.getUserID(), course.getCourseID());
+            Grade bestGrade = null;
+            Float highestTotalScore = null;
+
+            // Tìm Grade có totalScore cao nhất
+            for (Grade grade : grades) {
+                Float totalScore = grade.getTotalScore();
+                if (totalScore != null && (highestTotalScore == null || totalScore > highestTotalScore)) {
+                    highestTotalScore = totalScore;
+                    bestGrade = grade;
                 }
+            }
+
+            // Nếu có Grade hợp lệ, điền thông tin điểm
+            if (bestGrade != null) {
+                rowData[4] = panel.formatGrade(bestGrade.getMidtermScore()); // Điểm quá trình
+                rowData[5] = panel.formatGrade(bestGrade.getFinalScore()); // Điểm cuối kỳ
+                rowData[6] = panel.formatGrade(bestGrade.getTotalScore()); // Điểm tổng kết
+                rowData[7] = bestGrade.getLetterGrade(); // Điểm chữ
+                rowData[8] = panel.formatGrade(bestGrade.getGradePoint()); // Điểm hệ 4
+            } else {
+                rowData[4] = ""; // Điểm quá trình
+                rowData[5] = ""; // Điểm cuối kỳ
+                rowData[6] = ""; // Điểm tổng kết
+                rowData[7] = ""; // Điểm chữ
+                rowData[8] = ""; // Điểm hệ 4
             }
 
             rowData[9] = course.isMandatory();

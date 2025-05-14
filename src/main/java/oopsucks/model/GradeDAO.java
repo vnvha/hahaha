@@ -51,6 +51,20 @@ public class GradeDAO {
             return null;
         }
     }
+    
+    public List<Grade> getGradesByStudentAndCourse(String studentId, String courseId) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.createQuery(
+                    "FROM Grade g WHERE g.student.id = :studentId AND g.clazz.course.courseID = :courseId",
+                    Grade.class)
+                    .setParameter("studentId", studentId)
+                    .setParameter("courseId", courseId)
+                    .list();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
 
     public void saveGrade(Grade grade) {
         Transaction transaction = null;

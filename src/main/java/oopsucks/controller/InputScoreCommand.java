@@ -34,11 +34,9 @@ public class InputScoreCommand {
             }
             grade.setClazz(clazz); // Cập nhật Clazz để đảm bảo Course được liên kết
 
-            // Cập nhật điểm (totalScore, letterGrade, gradePoint sẽ được tính trong Grade)
-            grade.setMidtermScore(midterm);
-            grade.setFinalScore(finalScore);
-
-            // Lưu điểm
+            // Lưu điểm trực tiếp
+            grade.setMidtermScore(midterm); // Cập nhật midtermScore
+            grade.setFinalScore(finalScore); // Cập nhật finalScore
             gradeDAO.saveGrade(grade);
             System.out.println("Saved Grade: studentId=" + grade.getStudent().getUserID() + ", clazzId=" + grade.getClazz().getClazzID() +
                               ", midtermScore=" + midterm + ", finalScore=" + finalScore + ", totalScore=" + grade.getTotalScore());

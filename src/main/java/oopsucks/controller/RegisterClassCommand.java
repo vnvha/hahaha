@@ -33,6 +33,12 @@ public class RegisterClassCommand {
                 return "Lớp ID " + clazzID + " không tồn tại!";
             }
 
+            // Kiểm tra xem clazz có thuộc kỳ đang đăng ký không
+            Integer selectedSemester = RegistrationManager.getSelectedSemester();
+            if (selectedSemester == null || clazz.getSemester() != selectedSemester) {
+                return "Không thể đăng ký: Lớp ID " + clazzID + " không thuộc kỳ đang đăng ký!";
+            }
+
             Student student = session.createQuery(
                 "FROM Student WHERE accountName = :account", Student.class)
                 .setParameter("account", studentAccountName)
@@ -47,7 +53,36 @@ public class RegisterClassCommand {
                 return "Lớp ID: " + clazzID + " đã được đăng ký trước đó!";
             }
 
-            // Kiểm tra điều kiện tiên quyết
+            // Lấy danh sách các lớp đã đăng ký
+            List<Clazz> registeredClasses = clazzDAO.getClazzesByStudent(student);
+            
+            // Kiểm tra trùng lặp trong cùng một kỳ học
+            for (Clazz registered : registeredClasses) {
+                // Chỉ kiểm tra các lớp trong cùng kỳ học
+                if (registered.getSemester() == clazz.getSemester()) {
+                    // Kiểm tra trùng khóa học
+                    if (registered.getCourse() != null && clazz.getCourse() != null &&
+                        registered.getCourse().getCourseID().equals(clazz.getCourse().getCourseID())) {
+                        return "Không thể đăng ký: Khóa học " + clazz.getCourse().getCourseID() + 
+                               " đã được đăng ký trước đó trong cùng kỳ học!";
+                    }
+                    
+                    // Kiểm tra trùng thời gian
+                    if (registered.getDayOfWeek().equals(clazz.getDayOfWeek())) {
+                        int newStartTimeMinutes = convertToMinutes(clazz.getStartTime());
+                        int newEndTimeMinutes = convertToMinutes(clazz.getEndTime());
+                        int regStartTimeMinutes = convertToMinutes(registered.getStartTime());
+                        int regEndTimeMinutes = convertToMinutes(registered.getEndTime());
+                        if (!(newEndTimeMinutes <= regStartTimeMinutes || newStartTimeMinutes >= regEndTimeMinutes)) {
+                            return "Không thể đăng ký: Lớp ID " + clazzID + 
+                                   " trùng thời gian với lớp ID " + registered.getClazzID() + 
+                                   " trong cùng kỳ học!";
+                        }
+                    }
+                }
+            }
+
+            // Kiểm tra môn học điều kiện
             if (clazz.getCourse() != null) {
                 String prerequisiteCheckResult = checkPrerequisites(student, clazz.getCourse());
                 if (prerequisiteCheckResult != null) {
@@ -55,28 +90,12 @@ public class RegisterClassCommand {
                 }
             }
 
-            // Kiểm tra xung đột thời gian và lớp đã đăng ký
-            List<Clazz> registeredClasses = clazzDAO.getClazzesByStudent(student);
-            for (Clazz registered : registeredClasses) {
-                if (registered.getCourse() != null && clazz.getCourse() != null &&
-                    registered.getCourse().getCourseID().equals(clazz.getCourse().getCourseID())) {
-                    return "Không thể đăng ký: Khóa học " + clazz.getCourse().getCourseID() + " đã được đăng ký trước đó!";
-                }
-                if (registered.getDayOfWeek().equals(clazz.getDayOfWeek())) {
-                    int newStartTimeMinutes = convertToMinutes(clazz.getStartTime());
-                    int newEndTimeMinutes = convertToMinutes(clazz.getEndTime());
-                    int regStartTimeMinutes = convertToMinutes(registered.getStartTime());
-                    int regEndTimeMinutes = convertToMinutes(registered.getEndTime());
-                    if (!(newEndTimeMinutes <= regStartTimeMinutes || newStartTimeMinutes >= regEndTimeMinutes)) {
-                        return "Không thể đăng ký: Lớp ID " + clazzID + " trùng thời gian với lớp ID " + registered.getClazzID() + "!";
-                    }
-                }
-            }
-
+            // Kiểm tra sĩ số lớp học
             if (clazz.getRegisteredCount() >= clazz.getMaxCapacity()) {
                 return "Không thể đăng ký: Lớp " + clazzID + " đã đạt số lượng sinh viên tối đa!";
             }
 
+            // Thực hiện đăng ký
             clazz.getStudents().add(student);
             clazz.setRegisteredCount(clazz.getRegisteredCount() + 1);
             session.merge(clazz);

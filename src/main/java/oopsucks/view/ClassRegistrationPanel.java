@@ -20,7 +20,9 @@ public class ClassRegistrationPanel extends JPanel {
     private CardLayout cardLayout;
     private String accountName;
     private JTextField clazzIdField;
+    private JTextField semesterField;
     private JLabel messageLabel;
+    private Integer selectedSemester; // Lưu kỳ học đã chọn
 
     public ClassRegistrationPanel(String accountName, JPanel cardPanel, CardLayout cardLayout) {
         this.accountName = accountName;
@@ -63,11 +65,26 @@ public class ClassRegistrationPanel extends JPanel {
         availableClassesTable = new JTable(availableModel);
         availableClassesTable.setFont(new Font("Arial", Font.PLAIN, 14));
         availableClassesTable.setRowHeight(30);
-        populateAvailableClasses();
         topPanel.add(new JScrollPane(availableClassesTable), BorderLayout.CENTER);
 
         JPanel inputPanel = new JPanel();
         inputPanel.setBackground(Color.WHITE);
+
+        // Ô nhập kỳ học
+        JLabel semesterLabel = new JLabel("Nhập kỳ học:");
+        semesterLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        semesterField = new JTextField(5);
+        semesterField.setFont(new Font("Arial", Font.PLAIN, 16));
+        JButton showClassesButton = new JButton("Hiển thị lớp");
+        showClassesButton.setFont(new Font("Arial", Font.BOLD, 16));
+        showClassesButton.setBackground(new Color(70, 130, 180));
+        showClassesButton.setForeground(Color.WHITE);
+        showClassesButton.addActionListener(e -> {
+            populateAvailableClasses();
+            populateRegisteredClasses(); // Cập nhật cả bảng lớp đã đăng ký
+        });
+
+        // Ô nhập Clazz ID
         JLabel clazzIdLabel = new JLabel("Nhập Clazz ID:");
         clazzIdLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         clazzIdField = new JTextField(10);
@@ -77,6 +94,10 @@ public class ClassRegistrationPanel extends JPanel {
         registerButton.setBackground(new Color(70, 130, 180));
         registerButton.setForeground(Color.WHITE);
         registerButton.addActionListener(e -> registerClass());
+
+        inputPanel.add(semesterLabel);
+        inputPanel.add(semesterField);
+        inputPanel.add(showClassesButton);
         inputPanel.add(clazzIdLabel);
         inputPanel.add(clazzIdField);
         inputPanel.add(registerButton);
@@ -123,7 +144,7 @@ public class ClassRegistrationPanel extends JPanel {
 
         bottomPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        // Thêm nút "Quay lại"
+        // Nút Quay lại
         JButton backButton = new JButton("Quay lại");
         backButton.setFont(new Font("Arial", Font.BOLD, 16));
         backButton.setBackground(new Color(70, 130, 180));
@@ -137,42 +158,88 @@ public class ClassRegistrationPanel extends JPanel {
         splitPane.setTopComponent(topPanel);
         splitPane.setBottomComponent(bottomPanel);
         add(splitPane, BorderLayout.CENTER);
-
-        populateRegisteredClasses();
     }
 
     private void populateAvailableClasses() {
         DefaultTableModel model = (DefaultTableModel) availableClassesTable.getModel();
         model.setRowCount(0);
-        List<Clazz> classes = clazzDAO.getAllClazzes();
-        for (Clazz clazz : classes) {
-            model.addRow(new Object[]{
-                clazz.getClazzID(),
-                clazz.getCourse() != null ? clazz.getCourse().getCourseID() : "N/A",
-                clazz.getStartTime(),
-                clazz.getEndTime(),
-                clazz.getDayOfWeek(),
-                clazz.getRoom(),
-                clazz.getMaxCapacity(),
-                clazz.getRegisteredCount()
-            });
+        String semesterInput = semesterField.getText().trim();
+        
+        if (semesterInput.isEmpty()) {
+            showMessage("Vui lòng nhập kỳ học!", Color.RED);
+            selectedSemester = null; // Reset kỳ học đã chọn
+            return;
+        }
+
+        try {
+            int semester = Integer.parseInt(semesterInput);
+            Integer selectedSemesterFromManager = RegistrationManager.getSelectedSemester();
+            boolean isRegistrationOpen = RegistrationManager.getRegisterStatus();
+
+            if (!isRegistrationOpen) {
+                showMessage("Hiện tại không mở đăng ký lớp học!", Color.RED);
+                selectedSemester = null;
+                return;
+            }
+
+            if (selectedSemesterFromManager == null || selectedSemesterFromManager != semester) {
+                showMessage("Kỳ học không hợp lệ! Vui lòng nhập kỳ học được mở đăng ký.", Color.RED);
+                selectedSemester = null;
+                return;
+            }
+
+            selectedSemester = semester; // Lưu kỳ học đã chọn
+            List<Clazz> classes = clazzDAO.getAllClazzes();
+            for (Clazz clazz : classes) {
+                if (clazz.getSemester() == semester) {
+                    model.addRow(new Object[]{
+                        clazz.getClazzID(),
+                        clazz.getCourse() != null ? clazz.getCourse().getCourseID() : "N/A",
+                        clazz.getStartTime(),
+                        clazz.getEndTime(),
+                        clazz.getDayOfWeek(),
+                        clazz.getRoom(),
+                        clazz.getMaxCapacity(),
+                        clazz.getRegisteredCount()
+                    });
+                }
+            }
+
+            if (model.getRowCount() == 0) {
+                showMessage("Không tìm thấy lớp học nào cho kỳ " + semester, Color.RED);
+            } else {
+                showMessage("Đã hiển thị danh sách lớp học cho kỳ " + semester, new Color(0, 128, 0));
+            }
+        } catch (NumberFormatException e) {
+            showMessage("Kỳ học phải là số nguyên!", Color.RED);
+            selectedSemester = null; // Reset kỳ học đã chọn
         }
     }
 
     private void populateRegisteredClasses() {
         DefaultTableModel model = (DefaultTableModel) registeredClassesTable.getModel();
         model.setRowCount(0);
+        if (selectedSemester == null) {
+            return; // Không hiển thị lớp đã đăng ký nếu chưa chọn kỳ
+        }
         List<Clazz> registeredClasses = getRegisteredClassesCommand.execute();
+        boolean hasClasses = false;
         for (Clazz clazz : registeredClasses) {
-            model.addRow(new Object[]{
-                false,
-                clazz.getClazzID(),
-                clazz.getCourse() != null ? clazz.getCourse().getCourseID() : "N/A",
-                clazz.getStartTime(),
-                clazz.getEndTime(),
-                clazz.getDayOfWeek(),
-                clazz.getRoom()
-            });
+            if (clazz.getSemester() == selectedSemester) {
+                model.addRow(new Object[]{
+                    false,
+                    clazz.getClazzID(),
+                    clazz.getCourse() != null ? clazz.getCourse().getCourseID() : "N/A",
+                    clazz.getStartTime(),
+                    clazz.getEndTime(),
+                    clazz.getDayOfWeek(),
+                    clazz.getRoom()
+                });
+                hasClasses = true;
+            }
+        }
+        if (!hasClasses && selectedSemester != null) {
+            showMessage("Bạn chưa đăng ký lớp nào cho kỳ " + selectedSemester + "!", Color.RED);
         }
     }
 

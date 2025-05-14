@@ -7,7 +7,6 @@ import org.hibernate.Transaction;
 @Entity
 @Table(name = "registration_manager")
 public class RegistrationManager {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -16,8 +15,12 @@ public class RegistrationManager {
     @Column(name = "register", nullable = false)
     private boolean register;
 
+    @Column(name = "semester")
+    private Integer semester;
+
     public RegistrationManager() {
-        this.register = false; // Mặc định đóng đăng ký
+        this.register = false; 
+        this.semester = null;
     }
 
     public Long getId() {
@@ -36,19 +39,38 @@ public class RegistrationManager {
         this.register = register;
     }
 
+    public Integer getSemester() {
+        return semester;
+    }
+
+    public void setSemester(Integer semester) {
+        this.semester = semester;
+    }
+
     // Lấy trạng thái register từ cơ sở dữ liệu
     public static boolean getRegisterStatus() {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-        	RegistrationManager canRegister = session.get(RegistrationManager.class, 1L); // Giả sử id = 1
+            RegistrationManager canRegister = session.get(RegistrationManager.class, 1L); // Giả sử id = 1
             return canRegister != null && canRegister.isRegister();
         } catch (Exception e) {
             e.printStackTrace();
-            return false; // Mặc định đóng nếu có lỗi
+            return false; 
         }
     }
 
-    // Cập nhật trạng thái register trong cơ sở dữ liệu
-    public static void updateRegisterStatus(boolean register) {
+    // Lấy kỳ học đã chọn từ cơ sở dữ liệu
+    public static Integer getSelectedSemester() {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            RegistrationManager canRegister = session.get(RegistrationManager.class, 1L);
+            return canRegister != null ? canRegister.getSemester() : null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // Cập nhật trạng thái register và kỳ học trong cơ sở dữ liệu
+    public static void updateRegisterStatus(boolean register, Integer semester) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
@@ -58,6 +80,7 @@ public class RegistrationManager {
                 canRegister.setId(1L);
             }
             canRegister.setRegister(register);
+            canRegister.setSemester(semester);
             session.merge(canRegister);
             transaction.commit();
         } catch (Exception e) {
