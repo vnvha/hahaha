@@ -35,4 +35,4 @@ Kiểm tra đk tốt nghiệp
 2. Đối với sv niên chế
 - Hoàn thành tất cả các môn
 - Không còn công nợ học phí
-- GPA -> Điểm TBTL : trung bình cộng, không có hệ số
+- GPA -> Điểm TBTL : trung bình cộng thang 10, không có hệ số
