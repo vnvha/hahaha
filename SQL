@@ -1,0 +1,119 @@
+--DB: managementsystem1
+--username: postgres
+--mk: matkhau
+
+--student
+INSERT INTO student (user_id, dob, email, gender, password, role, user_name, institute, major)
+VALUES 
+('S001', '2002-08-15', 'alice.eng@example.com', 'Female', '1', 'YEARBASEDSTUDENT', 'Alice Nguyen', 'Engineering', 'Computer Science'),
+('S004', '2000-12-25', 'dave.edu@example.com', 'Male', '4', 'CREDITBASEDSTUDENT', 'Dave Pham', 'Education', 'Educational Management'),
+('S003', '2003-02-10', 'carol.edu@example.com', 'Female', 'SK4r9', 'YEARBASEDSTUDENT', 'Carol Le', 'Education', 'Primary Education'),
+('S002', '2001-05-20', 'bob.eng@example.com', 'Male', '2', 'CREDITBASEDSTUDENT', 'Bob Tran', 'Engineering', 'Mechanical Engineering');
+
+--teacher
+INSERT INTO teacher (user_id, dob, email, gender, password, role, user_name)
+VALUES
+('T003', '1982-07-15', 'teacher.minh@example.com', 'Male', 'minhteacher', 'TEACHER', 'Minh Tran'),
+('T001', '1985-09-12', 'teacher.lan@example.com', 'Female', '1', 'TEACHER', 'Lan Nguyen'),
+('T002', '1978-03-22', 'teacher.hoa@example.com', 'Female', '2', 'TEACHER', 'Hoa Pham');
+
+--course
+INSERT INTO course (
+    course_id, course_name, credit_number,
+    final_exam_weight, institute, is_mandatory,
+    type_id, credit_chargeable
+)
+VALUES
+('EDU101', 'Foundations of Education', 3, 0.7, 'Education', TRUE, 'T1', 4),
+('EDU102', 'Child Psychology', 3, 0.5, 'Education', TRUE, 'T1', 4),
+('EDU103', 'Teaching Methodologies', 3, 0.5, 'Education', TRUE, 'T1', 4),
+('EDU104', 'Curriculum Development', 3, 0.7, 'Education', TRUE, 'T2', 4),
+('EDU105', 'Educational Assessment', 3, 0.6, 'Education', TRUE, 'T2', 4),
+('EDU106', 'Special Education', 3, 0.6, 'Education', TRUE, 'T1', 4),
+('EDU107', 'Educational Technology', 3, 0.7, 'Education', FALSE, 'T2', 4),
+('EDU108', 'Classroom Management', 3, 0.6, 'Education', TRUE, 'T1', 4),
+('EDU109', 'Language and Literacy', 3, 0.6, 'Education', FALSE, 'T1', 4),
+('EDU110', 'Early Childhood Education', 3, 0.7, 'Education', FALSE, 'T2', 4),
+('EDU111', 'Educational Psychology', 3, 0.5, 'Education', TRUE, 'T1', 4),
+('EDU112', 'Sociology of Education', 3, 0.5, 'Education', FALSE, 'T2', 4),
+('EDU113', 'Inclusive Education', 3, 0.6, 'Education', TRUE, 'T1', 4),
+('EDU114', 'Philosophy of Education', 3, 0.6, 'Education', TRUE, 'T2', 4),
+('EDU115', 'Research in Education', 3, 0.6, 'Education', TRUE, 'T2', 4),
+
+('ENG101', 'Introduction to Engineering', 3, 0.6, 'Engineering', TRUE, 'T1', 4),
+('ENG102', 'Engineering Mathematics', 3, 0.5, 'Engineering', TRUE, 'T1', 4),
+('ENG103', 'Mechanics I', 3, 0.7, 'Engineering', TRUE, 'T1', 4),
+('ENG104', 'Thermodynamics', 3, 0.6, 'Engineering', TRUE, 'T2', 4),
+('ENG105', 'Engineering Drawing', 3, 0.7, 'Engineering', TRUE, 'T2', 4),
+('ENG106', 'Fluid Mechanics', 3, 0.5, 'Engineering', TRUE, 'T2', 4),
+('ENG107', 'Materials Science', 3, 0.6, 'Engineering', TRUE, 'T1', 4),
+('ENG108', 'Circuit Theory', 3, 0.6, 'Engineering', TRUE, 'T1', 4),
+('ENG109', 'Control Systems', 3, 0.5, 'Engineering', TRUE, 'T2', 4),
+('ENG110', 'Engineering Design', 3, 0.7, 'Engineering', TRUE, 'T1', 4),
+('ENG111', 'Numerical Methods', 3, 0.5, 'Engineering', TRUE, 'T1', 4),
+('ENG113', 'Project Management', 3, 0.6, 'Engineering', FALSE, 'T2', 4),
+('ENG114', 'Dynamics', 3, 0.6, 'Engineering', FALSE, 'T1', 4),
+('ENG115', 'Robotics Basics', 3, 0.6, 'Engineering', FALSE, 'T2', 4),
+('ENG112', 'Embedded Systems', 3, 0.7, 'Engineering', FALSE, 'T2', 4);
+
+--prereq_course_id
+INSERT INTO course_prerequisite (course_id, prereq_course_id)
+VALUES
+('ENG110', 'ENG109'),
+('ENG110', 'ENG108'),
+('ENG105', 'ENG101'),
+('ENG104', 'ENG101');
+
+--clazz
+INSERT INTO clazz (
+    clazz_id, day_of_week, end_time, max_capacity, registered_count,
+    room, semester, start_time, time, weeks, course_id, teacher_id
+) VALUES
+(2, 'Tuesday', '12:00', 40, 22, 'D101', 20241, '10:00', '10:00-12:00', '1-15', 'ENG101', 'T001'),
+(3, 'Monday', '12:00', 40, 31, 'A102', 20241, '10:00', '09:00-12:00', '1-15', 'ENG102', 'T001'),
+(7, 'Monday', '14:00', 40, 27, 'B101', 20241, '12:00', '12:00-14:00', '1-15', 'ENG106', 'T001'),
+(8, 'Tuesday', '16:00', 40, 32, 'B102', 20241, '14:00', '14:00-16:00', '1-15', 'ENG107', 'T001'),
+(13, 'Friday', '10:00', 40, 29, 'A105', 20242, '08:00', '08:00-10:00', '1-15', 'ENG105', 'T001'),
+(12, 'Thursday', '10:00', 40, 27, 'D104', 20242, '08:00', '08:00-10:00', '1-15', 'ENG104', 'T001'),
+(16, 'Tuesday', '16:00', 40, 36, 'E102', 20242, '14:00', '14:00-16:00', '1-15', 'ENG107', 'T001'),
+(17, 'Thursday', '16:00', 40, 33, 'B104', 20242, '14:00', '14:00-16:00', '1-15', 'ENG109', 'T001'),
+(19, 'Monday', '10:00', 40, 34, 'C101', 20242, '08:00', '08:00-10:00', '1-15', 'ENG111', 'T001'),
+(15, 'Monday', '14:00', 40, 32, 'E101', 20242, '12:00', '12:00-14:00', '1-15', 'ENG106', 'T001'),
+(9, 'Wednesday', '14:00', 40, 30, 'B103', 20241, '12:00', '12:00-14:00', '1-15', 'ENG108', 'T001'),
+(23, 'Friday', '14:00', 40, 23, 'B105', 20251, '12:00', '12:00-14:00', '1-15', 'ENG110', 'T001'),
+(25, 'Tuesday', '15:00', 40, 24, 'F102', 20251, '13:00', '13:00-15:00', '1-15', 'ENG112', 'T001'),
+(26, 'Wednesday', '10:00', 40, 23, 'F103', 20251, '08:00', '08:00-10:00', '1-15', 'ENG113', 'T001'),
+(28, 'Thursday', '12:00', 40, 37, 'F104', 20251, '10:00', '10:00-12:00', '1-15', 'ENG114', 'T001'),
+(29, 'Friday', '10:00', 40, 25, 'C105', 20251, '08:00', '08:00-10:00', '1-15', 'ENG115', 'T001'),
+(14, 'Friday', '12:00', 40, 28, 'D105', 20242, '10:00', '10:00-12:00', '1-15', 'ENG105', 'T001'),
+(18, 'Friday', '14:00', 40, 30, 'E105', 20242, '12:00', '12:00-14:00', '1-15', 'ENG110', 'T001'),
+(30, 'Friday', '10:00', 40, 38, 'F105', 20251, '08:00', '08:00-10:00', '1-15', 'ENG115', 'T001'),
+(5, 'Wednesday', '10:00', 40, 35, 'A103', 20241, '08:00', '08:00-10:00', '1-15', 'ENG103', 'T001'),
+(33, 'Friday', '12:00', 40, 28, 'D105', 20241, '10:00', '10:00-12:00', '1-15', 'ENG105', 'T001'),
+(32, 'Wednesday', '14:00', 40, 32, 'E103', 20241, '12:00', '12:00-14:00', '1-15', 'ENG108', 'T001'),
+(1, 'Monday', '10:00', 40, 25, 'A101', 20241, '08:00', '08:00-10:00', '1-15', 'ENG101', 'T001'),
+(10, 'Wednesday', '14:00', 40, 32, 'E103', 20241, '12:00', '12:00-14:00', '1-15', 'ENG108', 'T001'),
+(21, 'Wednesday', '10:00', 40, 30, 'C103', 20242, '08:00', '08:00-10:00', '1-15', 'ENG113', 'T001'),
+(11, 'Thursday', '12:00', 40, 20, 'A104', 20242, '10:00', '10:00-12:00', '1-15', 'ENG104', 'T001'),
+(27, 'Thursday', '12:00', 40, 36, 'C104', 20251, '10:00', '10:00-12:00', '1-15', 'ENG114', 'T001'),
+(20, 'Monday', '10:00', 40, 25, 'F101', 20242, '08:00', '08:00-10:00', '1-15', 'ENG111', 'T001'),
+(24, 'Tuesday', '12:00', 40, 27, 'C102', 20251, '10:00', '10:00-12:00', '1-15', 'ENG112', 'T001'),
+(22, 'Tuesday', '16:00', 40, 27, 'E104', 20251, '14:00', '14:00-16:00', '1-15', 'ENG109', 'T001'),
+(31, 'Friday', '14:00', 40, 29, 'B103', 20241, '12:00', '12:00-14:00', '1-15', 'ENG108', 'T001'),
+(4, 'Tuesday', '14:00', 40, 29, 'D102', 20241, '12:00', '12:00-14:00', '1-15', 'ENG102', 'T001'),
+(6, 'Wednesday', '16:00', 40, 35, 'D103', 20241, '14:00', '14:00-16:00', '1-15', 'ENG103', 'T001');
+
+--major_credit_fees
+INSERT INTO major_credit_fees (credit_fee, major) VALUES
+(900000, 'Information Technology'),
+(750000, 'Business Administration'),
+(650000, 'Civil Engineering'),
+(550000, 'English Language');
+
+--major_semester_fees
+INSERT INTO major_semester_fees (id, major, semester_fee) VALUES 
+(1, 'Computer Science', 10000000),
+(2, 'Primary Education', 12000000);
+
+-- các bảng khác sẽ được tự tạo
+
