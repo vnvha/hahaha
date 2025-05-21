@@ -12,12 +12,11 @@ public class CreditBasedStudent extends Student {
     public CreditBasedStudent() {
     }
 
-    public CreditBasedStudent(String userName, String userID, String email, String dob, String accountName, String password, Role role, String major, String faculty, int totalCredits) {
-        super(userName, userID, email, dob, accountName, password, role, major, faculty);
+    public CreditBasedStudent(String userName, String userID, String email, String dob, String password, Role role, String major, String faculty, int totalCredits) {
+        super(userName, userID, email, dob, password, role, major, faculty);
         this.totalCredits = totalCredits;
     }
 
-    // Getter và Setter
     public int getTotalCredits() {
         return totalCredits;
     }

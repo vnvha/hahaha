@@ -13,7 +13,7 @@ public class LoginPanel extends JPanel {
     private ButtonGroup roleGroup;
     private JPanel cardPanel;
     private CardLayout cardLayout;
-    private JLabel errorLabel; // Added for error message
+    private JLabel errorLabel;
 
     public LoginPanel(JPanel cardPanel, CardLayout cardLayout) {
         this.cardPanel = cardPanel;
@@ -90,27 +90,39 @@ public class LoginPanel extends JPanel {
         gbc.gridy = 5;
         add(passwordField, gbc);
 
+        JButton forgotPasswordButton = new JButton("Quên mật khẩu");
+        forgotPasswordButton.setFont(new Font("Arial", Font.BOLD,14)); 
+        forgotPasswordButton.setBackground(Color.WHITE); 
+        forgotPasswordButton.setForeground(	new Color(100, 149, 237)); 
+        forgotPasswordButton.setBorderPainted(false); 
+        forgotPasswordButton.setContentAreaFilled(false);
+        gbc.gridx = 1;
+        gbc.gridy = 6; 
+        gbc.gridwidth = 1;
+        gbc.anchor = GridBagConstraints.LINE_END; // Căn phải
+        add(forgotPasswordButton, gbc);
+
         errorLabel = new JLabel("");
         errorLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         errorLabel.setForeground(Color.RED);
         errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
         gbc.gridx = 0;
-        gbc.gridy = 6;
+        gbc.gridy = 7;
         gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
         add(errorLabel, gbc);
 
-       
         JButton loginButton = new JButton("Đăng nhập");
         loginButton.setFont(new Font("Arial", Font.BOLD, 18));
         loginButton.setBackground(new Color(70, 130, 180));
         gbc.gridx = 0;
-        gbc.gridy = 7;
+        gbc.gridy = 8;
         gbc.gridwidth = 2;
         add(loginButton, gbc);
 
         loginButton.addActionListener(e -> {
-            errorLabel.setText(""); 
-            String username = usernameField.getText().trim();
+            errorLabel.setText("");
+            String userID = usernameField.getText().trim();
             String password = new String(passwordField.getPassword()).trim();
             Role role = getSelectedRole();
 
@@ -119,29 +131,33 @@ public class LoginPanel extends JPanel {
                 return;
             }
 
-            Command loginCommand = new LoginCommand(username, password, role);
+            Command loginCommand = new LoginCommand(userID, password, role);
             if (loginCommand.execute()) {
                 switch (role) {
                     case CREDITBASEDSTUDENT:
-                        cardPanel.add(new CreditBasedStudentPanel(username, cardPanel, cardLayout), "CreditBasedStudent");
-                        cardLayout.show(cardPanel, "CreditBasedStudent");
+                        cardPanel.add(new StudentPanel(userID, cardPanel, cardLayout), "StudentPanel");
+                        cardLayout.show(cardPanel, "StudentPanel");
                         break;
                     case YEARBASEDSTUDENT:
-                        cardPanel.add(new YearBasedStudentPanel(username, cardPanel, cardLayout), "YearBasedStudent");
-                        cardLayout.show(cardPanel, "YearBasedStudent");
+                    	cardPanel.add(new StudentPanel(userID, cardPanel, cardLayout), "StudentPanel");
+                        cardLayout.show(cardPanel, "StudentPanel");
                         break;
                     case TEACHER:
-                        cardPanel.add(new TeacherPanel(username, cardPanel, cardLayout), "Teacher");
+                        cardPanel.add(new TeacherPanel(userID, cardPanel, cardLayout), "Teacher");
                         cardLayout.show(cardPanel, "Teacher");
                         break;
                 }
-                // Clear fields after successful login
                 usernameField.setText("");
                 passwordField.setText("");
                 roleGroup.clearSelection();
             } else {
                 errorLabel.setText("Tài khoản không có hoặc nhập sai mật khẩu!");
             }
+        });
+
+        forgotPasswordButton.addActionListener(e -> {
+            cardPanel.add(new ForgotPasswordPanel(cardPanel, cardLayout), "ForgotPassword");
+            cardLayout.show(cardPanel, "ForgotPassword");
         });
     }
 

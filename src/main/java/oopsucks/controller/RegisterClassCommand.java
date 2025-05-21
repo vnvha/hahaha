@@ -3,7 +3,6 @@ package oopsucks.controller;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import oopsucks.model.*;
-
 import java.util.List;
 
 public class RegisterClassCommand {
@@ -11,14 +10,16 @@ public class RegisterClassCommand {
     private UserDAO userDAO;
     private GradeDAO gradeDAO;
     private CourseDAO courseDAO;
-    private String studentAccountName;
+    private TuitionFeeDAO tuitionFeeDAO; // Thêm TuitionFeeDAO
+    private String studentUserID;
 
-    public RegisterClassCommand(String studentAccountName) {
+    public RegisterClassCommand(String studentUserID) {
         this.clazzDAO = new ClazzDAO();
         this.userDAO = new UserDAO();
         this.gradeDAO = new GradeDAO();
         this.courseDAO = new CourseDAO();
-        this.studentAccountName = studentAccountName;
+        this.tuitionFeeDAO = new TuitionFeeDAO(); // Khởi tạo TuitionFeeDAO
+        this.studentUserID = studentUserID;
     }
 
     public String execute(Integer clazzID) {
@@ -33,41 +34,34 @@ public class RegisterClassCommand {
                 return "Lớp ID " + clazzID + " không tồn tại!";
             }
 
-            // Kiểm tra xem clazz có thuộc kỳ đang đăng ký không
             Integer selectedSemester = RegistrationManager.getSelectedSemester();
             if (selectedSemester == null || clazz.getSemester() != selectedSemester) {
                 return "Không thể đăng ký: Lớp ID " + clazzID + " không thuộc kỳ đang đăng ký!";
             }
 
             Student student = session.createQuery(
-                "FROM Student WHERE accountName = :account", Student.class)
-                .setParameter("account", studentAccountName)
+                "FROM Student WHERE userID = :userID", Student.class)
+                .setParameter("userID", studentUserID)
                 .uniqueResult();
             if (student == null) {
                 return "Không tìm thấy thông tin sinh viên!";
             }
 
             boolean studentExists = clazz.getStudents().stream()
-                .anyMatch(s -> s.getUserID().equals(student.getUserID()));
+                    .anyMatch(s -> s.getUserID().equals(student.getUserID()));
             if (studentExists) {
                 return "Lớp ID: " + clazzID + " đã được đăng ký trước đó!";
             }
 
-            // Lấy danh sách các lớp đã đăng ký
-            List<Clazz> registeredClasses = clazzDAO.getClazzesByStudent(student);
-            
             // Kiểm tra trùng lặp trong cùng một kỳ học
+            List<Clazz> registeredClasses = clazzDAO.getClazzesByStudent(student);
             for (Clazz registered : registeredClasses) {
-                // Chỉ kiểm tra các lớp trong cùng kỳ học
                 if (registered.getSemester() == clazz.getSemester()) {
-                    // Kiểm tra trùng khóa học
                     if (registered.getCourse() != null && clazz.getCourse() != null &&
                         registered.getCourse().getCourseID().equals(clazz.getCourse().getCourseID())) {
                         return "Không thể đăng ký: Khóa học " + clazz.getCourse().getCourseID() + 
                                " đã được đăng ký trước đó trong cùng kỳ học!";
                     }
-                    
-                    // Kiểm tra trùng thời gian
                     if (registered.getDayOfWeek().equals(clazz.getDayOfWeek())) {
                         int newStartTimeMinutes = convertToMinutes(clazz.getStartTime());
                         int newEndTimeMinutes = convertToMinutes(clazz.getEndTime());
@@ -75,8 +69,7 @@ public class RegisterClassCommand {
                         int regEndTimeMinutes = convertToMinutes(registered.getEndTime());
                         if (!(newEndTimeMinutes <= regStartTimeMinutes || newStartTimeMinutes >= regEndTimeMinutes)) {
                             return "Không thể đăng ký: Lớp ID " + clazzID + 
-                                   " trùng thời gian với lớp ID " + registered.getClazzID() + 
-                                   " trong cùng kỳ học!";
+                                   " trùng thời gian với lớp ID " + registered.getClazzID();
                         }
                     }
                 }
@@ -105,6 +98,16 @@ public class RegisterClassCommand {
             gradeInitializer.initializeGrade(student, clazz);
             System.out.println("Processed Grade for student " + student.getUserID() + " in clazz " + clazz.getClazzID());
 
+            // Tính toán lại học phí cho kỳ học
+            TuitionFee tuitionFee = tuitionFeeDAO.calculateAndSaveTuitionFee(student.getUserID(), clazz.getSemester());
+            if (tuitionFee != null) {
+                System.out.println("Đã tính học phí cho sinh viên " + student.getUserID() + 
+                                   " học kỳ " + clazz.getSemester() + ": " + tuitionFee.getTuition());
+            } else {
+                System.out.println("Không thể tính học phí cho sinh viên " + student.getUserID() + 
+                                   " học kỳ " + clazz.getSemester());
+            }
+
             transaction.commit();
             return "Đăng ký lớp ID: " + clazzID + " thành công!";
         } catch (Exception e) {
@@ -118,67 +121,49 @@ public class RegisterClassCommand {
     private String checkPrerequisites(Student student, Course course) {
         List<Course> prerequisites = courseDAO.getPrerequisites(course);
         System.out.println("Prerequisites for course " + course.getCourseID() + ": " + prerequisites);
+
         if (prerequisites == null || prerequisites.isEmpty()) {
             System.out.println("No prerequisites found.");
             return null;
         }
 
-        StringBuilder failedPrereqs = new StringBuilder();
-        StringBuilder pendingPrereqs = new StringBuilder();
+        StringBuilder missingGrades = new StringBuilder();
 
         for (Course prereq : prerequisites) {
-            Grade bestGrade = findBestGradeForCourse(student, prereq);
-            if (bestGrade == null) {
-                if (failedPrereqs.length() > 0) {
-                    failedPrereqs.append(", ");
+            boolean hasGrade = hasAnyGrade(student, prereq);
+
+            if (!hasGrade) {
+                if (missingGrades.length() > 0) {
+                    missingGrades.append(", ");
                 }
-                failedPrereqs.append(prereq.getCourseID());
-            } else if (bestGrade.getTotalScore() == null) {
-                if (pendingPrereqs.length() > 0) {
-                    pendingPrereqs.append(", ");
-                }
-                pendingPrereqs.append(prereq.getCourseID());
-            } else if (bestGrade.getTotalScore() < 4.0f) {
-                if (failedPrereqs.length() > 0) {
-                    failedPrereqs.append(", ");
-                }
-                failedPrereqs.append(prereq.getCourseID());
+                missingGrades.append(prereq.getCourseID());
             }
         }
 
-        StringBuilder errorMessage = new StringBuilder();
-        if (failedPrereqs.length() > 0) {
-            errorMessage.append("Bạn chưa hoàn thành học phần: ").append(failedPrereqs);
-        }
-        if (pendingPrereqs.length() > 0) {
-            if (errorMessage.length() > 0) {
-                errorMessage.append("; ");
-            }
-            errorMessage.append("Các học phần đang chờ điểm: ").append(pendingPrereqs);
+        if (missingGrades.length() > 0) {
+            return "Không thể đăng ký: Bạn chưa học các học phần " + missingGrades;
         }
 
-        return errorMessage.length() > 0 ? "Không thể đăng ký: " + errorMessage.toString() : null;
+        return null; // Có thể đăng ký
     }
 
-    private Grade findBestGradeForCourse(Student student, Course prerequisiteCourse) {
+
+    private boolean hasAnyGrade(Student student, Course prerequisiteCourse) {
         List<Clazz> allStudentClasses = clazzDAO.getClazzesByStudent(student);
-        Grade bestGrade = null;
 
         for (Clazz clazz : allStudentClasses) {
-            if (clazz.getCourse() != null &&
+            if (clazz.getCourse() != null && 
                 clazz.getCourse().getCourseID().equals(prerequisiteCourse.getCourseID())) {
+                
                 Grade grade = gradeDAO.getGradeByStudentAndClazz(student, clazz);
                 if (grade != null && grade.getTotalScore() != null) {
-                    if (bestGrade == null ||
-                        bestGrade.getTotalScore() == null ||
-                        grade.getTotalScore() > bestGrade.getTotalScore()) {
-                        bestGrade = grade;
-                    }
+                    return true; // Có điểm -> đủ điều kiện
                 }
             }
         }
-        return bestGrade;
+        return false; // Không tìm thấy điểm nào
     }
+
 
     private int convertToMinutes(String time) {
         String[] parts = time.split(":");

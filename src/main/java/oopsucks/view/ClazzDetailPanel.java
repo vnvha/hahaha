@@ -12,14 +12,14 @@ import java.awt.*;
 import java.util.List;
 
 public class ClazzDetailPanel extends JPanel {
-    private String accountName;
+    private String userID;
     private Clazz clazz;
     private Student currentStudent;
     private JPanel cardPanel;
     private CardLayout cardLayout;
 
-    public ClazzDetailPanel(String accountName, Clazz clazz, Student currentStudent, JPanel cardPanel, CardLayout cardLayout) {
-        this.accountName = accountName;
+    public ClazzDetailPanel(String userID, Clazz clazz, Student currentStudent, JPanel cardPanel, CardLayout cardLayout) {
+        this.userID = userID;
         this.clazz = clazz;
         this.currentStudent = currentStudent;
         this.cardPanel = cardPanel;
@@ -120,7 +120,7 @@ public class ClazzDetailPanel extends JPanel {
                     student.getUserName(),
                     student.getEmail(),
                     student.getMajor(),
-                    student.getFaculty()
+                    student.getInstitute()
                 });
             }
         }

@@ -1,0 +1,38 @@
+Chức năng cho
+1. SV tín chỉ : đăng kí lớp học, xem tkb, xem điểm xem ctđt, công nợ học phí
+2. Sv niên chế: ....., không dc đăng ký lớp học
+3. Giảng viên : chấm điểm (với mọi gv), thay đổi tt sv, xác nhận học phí của sv, đóng/mở việc đăng ký lớp (chỉ với gv được chỉ định - admin)
+- chung: thay đổi mk, tìm mk nếu quên (chính xác là sẽ cấp lại mk và lưu trong csdl)
+
+Đăng ký lớp
+1. Giảng viên sẽ mở đăng ký cho kì, nếu không mở, sv sẽ không vào dc trang đăng ký
+2. Trong trang đk sẽ hiện các mã lớp cùng kì
+3. Lớp đăng ký không được trùng thời gian, mã môn với lớp đã đăng ký trước, không vượt số lượng tối đa và phải học các điều kiện đã có điểm
+4. Sinh viên có thể đăng ký lớp để học cải thiện
+
+TKB 
+1. Hiện các môn đã đăng ký
+2. Khi ấn vào một lớp sẽ hiện ra thông tin về lớp, điểm và danh sách sinh viên trong lớp
+
+CTĐT
+1. Hiện thông tin các học phần thuộc cùng khoa với sinh viên (tức là, sinh viên khoa nào thì phải học tất cả các môn của khoa đấy)  và điểm tương ứng
+2. Điểm sẽ được cập nhật điểm cao hơn nếu sv học nhiều lần
+3. Ấn vào Course_id sẽ hiện ra thông tin học phần (chỉ với sv tín chỉ)
+4. Tính GPA của tất cả các môn có điểm
+
+Công nợ học phí
+1. Học phí theo tín chỉ (sv tín chỉ) / theo kì học (sv niên chế) sẽ được qui định sẵn theo "major"
+2. SV tín chỉ : học phí = tổng số tín học phí trong kì * giá/tín chỉ
+3. Khi đăng kí xong lớp sẽ được tự động tính học phí, mặc định là chưa thanh toán
+4. Giảng viên sẽ xác nhận trạng thái "thanh toán" cho sv
+
+Kiểm tra đk tốt nghiệp
+1. Đối với sv tín chỉ
+- Hoàn thành tất cả các môn bắt buộc và 2 môn tự chọn
+- Không còn công nợ học phí
+- GPA sẽ tính theo các môn trên
+
+2. Đối với sv niên chế
+- Hoàn thành tất cả các môn
+- Không còn công nợ học phí
+- GPA -> Điểm TBTL : trung bình cộng, không có hệ số

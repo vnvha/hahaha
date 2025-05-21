@@ -2,7 +2,6 @@ package oopsucks.model;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -135,4 +134,34 @@ public class ClazzDAO {
             return new ArrayList<>();
         }
     }
+    
+    
+    public List<Clazz> getClazzesByStudentAndSemester(Student student, Integer semester) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.createQuery(
+                    "SELECT c FROM Clazz c JOIN c.students s LEFT JOIN FETCH c.course WHERE s.id = :studentId AND c.semester = :semester",
+                    Clazz.class)
+                .setParameter("studentId", student.getUserID())
+                .setParameter("semester", semester)
+                .list();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+    
+    public List<Integer> getRegisteredSemestersByStudent(String studentID) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.createQuery(
+                "SELECT DISTINCT c.semester FROM Clazz c JOIN c.students s WHERE s.id = :studentId ORDER BY c.semester",
+                Integer.class)
+                .setParameter("studentId", studentID)
+                .getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+    
+    
 }

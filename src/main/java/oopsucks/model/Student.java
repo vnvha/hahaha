@@ -10,21 +10,21 @@ public abstract class Student extends User {
     @Column(name = "major")
     private String major;
 
-    @Column(name = "faculty")
-    private String faculty;
+    @Column(name = "institute")
+    private String institute;
 
     public Student() {
     }
 
-    public Student(String userName, String userID, String email, String dob, String accountName, String password, Role role, String major, String faculty) {
-        super(userName, userID, email, dob, accountName, password, role);
+    public Student(String userName, String userID, String email, String dob, String password, Role role, String major, String institute) {
+        super(userName, userID, email, dob, password, role);
         this.major = major;
-        this.faculty = faculty;
+        this.institute = institute;
     }
 
     public String getMajor() { return major; }
     public void setMajor(String major) { this.major = major; }
 
-    public String getFaculty() { return faculty; }
-    public void setFaculty(String faculty) { this.faculty = faculty; }
+    public String getInstitute() { return institute; }
+    public void setInstitute(String institute) { this.institute = institute; }
 }

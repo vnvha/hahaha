@@ -11,17 +11,20 @@ public class CheckGraduationCommand {
     private final List<Course> selectedOptionalCourses;
     private final ClazzDAO clazzDAO;
     private final GradeDAO gradeDAO;
+    private final TuitionFeeDAO tuitionFeeDAO; // Thêm TuitionFeeDAO
 
     public CheckGraduationCommand(Student student,
                                   List<Course> mandatoryCourses,
                                   List<Course> selectedOptionalCourses,
                                   ClazzDAO clazzDAO,
-                                  GradeDAO gradeDAO) {
+                                  GradeDAO gradeDAO,
+                                  TuitionFeeDAO tuitionFeeDAO) { // Thêm tham số TuitionFeeDAO
         this.student = student;
         this.mandatoryCourses = mandatoryCourses;
         this.selectedOptionalCourses = selectedOptionalCourses;
         this.clazzDAO = clazzDAO;
         this.gradeDAO = gradeDAO;
+        this.tuitionFeeDAO = tuitionFeeDAO; // Lưu lại tham số TuitionFeeDAO
     }
 
     public Result execute() {
@@ -33,8 +36,14 @@ public class CheckGraduationCommand {
 
         float totalWeightedPoints = 0;
         int totalCredits = 0;
+        String studentInstitute = student.getInstitute();
 
         for (Course course : coursesToCheck) {
+            // Chỉ kiểm tra và tính điểm cho các khóa học có cùng institute với sinh viên
+            if (!course.getInstitute().equals(studentInstitute)) {
+                continue;
+            }
+            
             Clazz registeredClazz = findRegisteredClazz(student, course);
             if (registeredClazz == null) {
                 allScoresValid = false;
@@ -43,7 +52,7 @@ public class CheckGraduationCommand {
             }
 
             Grade grade = gradeDAO.getGradeByStudentAndClazz(student, registeredClazz);
-            if (grade == null || grade.getTotalScore() == null || grade.getTotalScore() < 4.0f) {
+            if (grade == null || grade.getTotalScore() == null || grade.getGradePoint() < 2.0f) {
                 allScoresValid = false;
                 String reason;
                 if (grade == null) {
@@ -51,7 +60,7 @@ public class CheckGraduationCommand {
                 } else if (grade.getTotalScore() == null) {
                     reason = "đang chờ điểm";
                 } else {
-                    reason = "điểm " + String.format("%.2f", grade.getTotalScore());
+                    reason = "điểm: " + grade.getLetterGrade();
                 }
                 invalidCoursesList.add(course.getCourseID() + " (" + reason + ")");
             }
@@ -63,18 +72,41 @@ public class CheckGraduationCommand {
             }
         }
 
+        // Kiểm tra học phí
+        List<TuitionFee> tuitionFees = tuitionFeeDAO.getTuitionFeesByStudent(student.getUserID());
+        boolean hasPendingTuition = false;
+        List<Integer> pendingSemesters = new ArrayList<>();
+        
+        for (TuitionFee fee : tuitionFees) {
+            if (!fee.getStatus()) { // Nếu chưa thanh toán
+                hasPendingTuition = true;
+                pendingSemesters.add(fee.getSemester());
+            }
+        }
+
         float gpa = totalCredits > 0 ? totalWeightedPoints / totalCredits : 0.0f;
 
-        if (allScoresValid && totalCredits > 0) {
+        if (allScoresValid && !hasPendingTuition && totalCredits > 0) {
             return new Result(true, "Thỏa mãn điều kiện tốt nghiệp. GPA: " + String.format("%.2f", gpa), gpa);
         } else {
             StringBuilder message = new StringBuilder("Không thỏa mãn điều kiện tốt nghiệp\n");
 
             if (!allScoresValid) {
-                message.append("Các môn không đạt (yêu cầu totalScore >= 4.0):\n");
+                message.append("Các môn không đạt:\n");
                 for (String course : invalidCoursesList) {
                     message.append("- ").append(course).append("\n");
                 }
+            }
+
+            if (hasPendingTuition) {
+                message.append("Còn nợ học phí học kỳ: ");
+                for (int i = 0; i < pendingSemesters.size(); i++) {
+                    message.append(pendingSemesters.get(i));
+                    if (i < pendingSemesters.size() - 1) {
+                        message.append(", ");
+                    }
+                }
+                message.append("\n");
             }
 
             if (totalCredits == 0) {

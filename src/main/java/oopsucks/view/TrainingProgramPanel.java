@@ -1,34 +1,38 @@
 package oopsucks.view;
 
-import oopsucks.controller.CalculateGPACommand;
-import oopsucks.controller.CheckGraduationCommand;
-import oopsucks.controller.LoadCourseDataCommand;
+import oopsucks.controller.*;
 import oopsucks.model.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 public class TrainingProgramPanel extends JPanel {
-    private final String studentAccountName;
+    private final String studentID;
     private final JTable courseTable;
     private final DefaultTableModel tableModel;
     private final CourseDAO courseDAO;
     private final ClazzDAO clazzDAO;
     private final GradeDAO gradeDAO;
     private final UserDAO userDAO;
+    private final TuitionFeeDAO tuitionFeeDAO;
+    private final JPanel cardPanel;
+    private final CardLayout cardLayout;
     private JLabel gpaLabel;
     private JTextArea resultLabel;
 
-    public TrainingProgramPanel(String accountName, JPanel cardPanel, CardLayout cardLayout) {
-        this.studentAccountName = accountName;
+    public TrainingProgramPanel(String userID, JPanel cardPanel, CardLayout cardLayout) {
+        this.studentID = userID;
         this.courseDAO = new CourseDAO();
         this.clazzDAO = new ClazzDAO();
         this.gradeDAO = new GradeDAO();
         this.userDAO = new UserDAO();
+        this.tuitionFeeDAO = new TuitionFeeDAO();
+        this.cardPanel = cardPanel;
+        this.cardLayout = cardLayout;
 
         setLayout(new BorderLayout());
 
@@ -44,7 +48,7 @@ public class TrainingProgramPanel extends JPanel {
 
         JButton backButton = new JButton("Quay lại");
         backButton.setFont(new Font("Arial", Font.BOLD, 14));
-        backButton.addActionListener(e -> cardLayout.show(cardPanel, "CreditBasedStudent"));
+        backButton.addActionListener(e -> cardLayout.show(cardPanel, "StudentPanel"));
         headerPanel.add(backButton, BorderLayout.EAST);
 
         add(headerPanel, BorderLayout.NORTH);
@@ -79,6 +83,22 @@ public class TrainingProgramPanel extends JPanel {
         courseTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
         courseTable.setAutoCreateRowSorter(true);
 
+        courseTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 1) {
+                    int row = courseTable.getSelectedRow();
+                    int column = courseTable.columnAtPoint(e.getPoint());
+                    if (row >= 0 && column == 0) {
+                        String courseId = (String) tableModel.getValueAt(row, 0);
+                        CourseDetailPanel detailPanel = new CourseDetailPanel(courseId, courseDAO, cardPanel, cardLayout);
+                        cardPanel.add(detailPanel, "CourseDetail");
+                        cardLayout.show(cardPanel, "CourseDetail");
+                    }
+                }
+            }
+        });
+
         JScrollPane scrollPane = new JScrollPane(courseTable);
         scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -99,7 +119,7 @@ public class TrainingProgramPanel extends JPanel {
         resultScrollPane.setBorder(BorderFactory.createEmptyBorder());
         footerPanel.add(resultScrollPane, BorderLayout.WEST);
 
-        // Right: GPA Label and Check Button
+        // Right: GPA Label, Check Buttons
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         gpaLabel = new JLabel("GPA: ");
         gpaLabel.setFont(new Font("Arial", Font.BOLD, 16));
@@ -109,6 +129,11 @@ public class TrainingProgramPanel extends JPanel {
         checkGraduationButton.setFont(new Font("Arial", Font.BOLD, 14));
         checkGraduationButton.addActionListener(e -> checkGraduation());
         rightPanel.add(checkGraduationButton);
+
+        JButton checkTuitionButton = new JButton("Kiểm tra công nợ");
+        checkTuitionButton.setFont(new Font("Arial", Font.BOLD, 14));
+        checkTuitionButton.addActionListener(e -> checkTuition());
+        rightPanel.add(checkTuitionButton);
 
         footerPanel.add(rightPanel, BorderLayout.EAST);
 
@@ -120,23 +145,24 @@ public class TrainingProgramPanel extends JPanel {
     }
 
     private void loadCourseData() {
-        LoadCourseDataCommand loader = new LoadCourseDataCommand(this, tableModel, userDAO, courseDAO, clazzDAO, gradeDAO);
-        loader.loadCourseData();
+        LoadCourseDataCommand loadCommand = new LoadCourseDataCommand(
+            this, tableModel, userDAO, courseDAO, clazzDAO, gradeDAO, true);
+        loadCommand.loadCourseData();
     }
 
     private void calculateAndDisplayGPA() {
-        Student student = userDAO.getStudent(studentAccountName);
+        Student student = userDAO.getStudent(studentID);
         if (student == null) {
             gpaLabel.setText("GPA: N/A");
             return;
         }
-        CalculateGPACommand gpaCommand = new CalculateGPACommand(student, clazzDAO, gradeDAO);
+        CalculateGPACommand gpaCommand = new CalculateGPACommand(student, courseDAO, clazzDAO, gradeDAO, true);
         CalculateGPACommand.GPAResult result = gpaCommand.execute();
         gpaLabel.setText(result.getMessage());
     }
 
     private void checkGraduation() {
-        Student student = userDAO.getStudent(studentAccountName);
+        Student student = userDAO.getStudent(studentID);
         if (student == null) {
             resultLabel.setText("Lỗi: Không thể tải thông tin sinh viên");
             resultLabel.setForeground(new Color(200, 0, 0));
@@ -165,8 +191,9 @@ public class TrainingProgramPanel extends JPanel {
             return;
         }
 
+        // Sử dụng constructor mới với tham số TuitionFeeDAO
         CheckGraduationCommand graduationCommand = new CheckGraduationCommand(
-            student, mandatoryCourses, selectedOptionalCourses, clazzDAO, gradeDAO
+            student, mandatoryCourses, selectedOptionalCourses, clazzDAO, gradeDAO, tuitionFeeDAO
         );
         CheckGraduationCommand.Result result = graduationCommand.execute();
 
@@ -174,9 +201,24 @@ public class TrainingProgramPanel extends JPanel {
         resultLabel.setForeground(result.isQualified() ? new Color(0, 128, 0) : new Color(200, 0, 0));
     }
 
+    private void checkTuition() {
+        // Cập nhật học phí cho tất cả kỳ học
+        Student student = userDAO.getStudent(studentID);
+        if (student == null) {
+            resultLabel.setText("Lỗi: Không thể tải thông tin sinh viên");
+            resultLabel.setForeground(new Color(200, 0, 0));
+            return;
+        }
+
+        // Tạo và thêm TuitionFeePanel
+        CreditStudentTuitionFeePanel studentCreditTuitionPanel = new CreditStudentTuitionFeePanel(studentID, cardPanel, cardLayout, tuitionFeeDAO, userDAO);
+        cardPanel.add(studentCreditTuitionPanel, "studentCreditTuitionPanel");
+        cardLayout.show(cardPanel, "studentCreditTuitionPanel");
+    }
+
     // Getter methods for helper classes
-    public String getStudentAccountName() {
-        return studentAccountName;
+    public String studentID() {
+        return studentID;
     }
 
     public JLabel getGpaLabel() {

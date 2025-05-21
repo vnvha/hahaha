@@ -36,6 +36,9 @@
         <mapping class="oopsucks.model.Clazz"/>
         <mapping class="oopsucks.model.Grade"/>
         <mapping class="oopsucks.model.RegistrationManager"/>
-        
+        <mapping class="oopsucks.model.TuitionFee"/>
+        <mapping class="oopsucks.model.MajorCreditFees"/>
+        <mapping class="oopsucks.model.MajorSemesterFees"/>
+        <mapping class="oopsucks.model.AnnualTuitionFee"/>
     </session-factory>
 </hibernate-configuration>

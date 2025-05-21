@@ -8,12 +8,12 @@ import java.util.List;
 public class FinishRegistrationCommand {
     private ClazzDAO clazzDAO;
     private GradeDAO gradeDAO;
-    private String studentAccountName;
+    private String studentUserID; 
 
-    public FinishRegistrationCommand(String studentAccountName) {
+    public FinishRegistrationCommand(String studentUserID) {
         this.clazzDAO = new ClazzDAO();
         this.gradeDAO = new GradeDAO();
-        this.studentAccountName = studentAccountName;
+        this.studentUserID = studentUserID;
     }
 
     public String execute() {
@@ -24,11 +24,11 @@ public class FinishRegistrationCommand {
             transaction = session.beginTransaction();
 
             Student student = session.createQuery(
-                "FROM Student WHERE accountName = :account", Student.class)
-                .setParameter("account", studentAccountName)
+                "FROM Student WHERE userID = :userID", Student.class) // Sửa truy vấn
+                .setParameter("userID", studentUserID)
                 .uniqueResult();
             if (student == null) {
-                return "Không tìm thấy thông tin sinh viên với tài khoản: " + studentAccountName;
+                return "Không tìm thấy thông tin sinh viên với userID: " + studentUserID;
             }
 
             List<Clazz> registeredClasses = clazzDAO.getClazzesByStudent(student);
@@ -47,7 +47,23 @@ public class FinishRegistrationCommand {
                     System.out.println("Đã cập nhật điểm cho sinh viên " + student.getUserID() + " trong lớp " + clazz.getClazzID());
                 }
             }
-
+         // Sau phần lưu điểm
+/*            
+         // Tính và lưu học phí cho học kỳ hiện tại
+            Integer currentSemester = null;
+            if (!registeredClasses.isEmpty()) {
+                currentSemester = registeredClasses.get(0).getSemester();
+            }
+         TuitionFeeDAO tuitionFeeDAO = new TuitionFeeDAO();
+         TuitionFee tuitionFee = tuitionFeeDAO.calculateAndSaveTuitionFee(student.getUserID(), currentSemester);
+         if (tuitionFee != null) {
+             System.out.println("Đã tính học phí cho sinh viên " + student.getUserID() + 
+                                " học kỳ " + currentSemester + ": " + tuitionFee.getTuition());
+         } else {
+             System.out.println("Không thể tính học phí cho sinh viên " + student.getUserID() + 
+                                " học kỳ " + currentSemester);
+         }
+*/
             transaction.commit();
             return "Đăng ký học phần thành công!";
         } catch (Exception e) {

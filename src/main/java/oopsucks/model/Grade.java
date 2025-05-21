@@ -106,9 +106,10 @@ public class Grade {
 
  
     private String calculateLetterGrade() {
-        if (totalScore == null) {
-            return null;
-        }
+    	if (midtermScore == null || finalScore == null || totalScore == null) {
+    	    return null;
+    	}
+    	if (midtermScore < 3 || finalScore < 3 || totalScore < 4) return "F";
         if (totalScore >= 9.5) return "A+";
         if (totalScore >= 8.5) return "A";
         if (totalScore >= 8.0) return "B+";

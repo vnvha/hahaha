@@ -16,10 +16,13 @@ public class Course {
     private String courseName;
 
     @Column(name = "credit_number", nullable = false)
-    private Integer creditNumber;
-
+    private Integer creditNumber; 
+    
+    @Column(name = "credit_chargeable", nullable = false)
+    private Integer chargeableCredits;
+    
     @Column(name = "institute", nullable = false)
-    private String institute;
+    private String institute;   
 
     @Column(name = "final_exam_weight", nullable = false)
     private Float finalExamWeight;
@@ -29,9 +32,6 @@ public class Course {
 
     @Column(name = "is_mandatory", nullable = false)
     private Boolean isMandatory;
-
-    @Column(name = "is_completed", nullable = false)
-    private Boolean isCompleted;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -46,17 +46,17 @@ public class Course {
     }
 
     // Constructor đầy đủ
-    public Course(String courseID, String courseName, int creditNumber, String institute,
-                  float finalExamWeight, String typeID, boolean isMandatory, boolean isCompleted,
+    public Course(String courseID, String courseName, int creditNumber, int chargeableCredits, String institute,
+                  float finalExamWeight, String typeID, boolean isMandatory,
                   List<Course> prereqCourses) {
         this.courseID = courseID;
         this.courseName = courseName;
         this.creditNumber = creditNumber;
+        this.chargeableCredits = chargeableCredits;
         this.institute = institute;
         this.finalExamWeight = finalExamWeight;
         this.typeID = typeID;
         this.isMandatory = isMandatory;
-        this.isCompleted = isCompleted;
         this.prereqCourses = prereqCourses != null ? prereqCourses : new ArrayList<>();
     }
 
@@ -70,6 +70,9 @@ public class Course {
     public int getCreditNumber() { return creditNumber; }
     public void setCreditNumber(int creditNumber) { this.creditNumber = creditNumber; }
     
+    public int getChargeableCredits() { return chargeableCredits; }
+    public void setChargeableCredits(int chargeableCredits) { this.chargeableCredits = chargeableCredits; }
+    
     public String getInstitute() { return institute; }
     public void setInstitute(String institute) { this.institute = institute; }
     
@@ -81,9 +84,6 @@ public class Course {
     
     public boolean isMandatory() { return isMandatory; }
     public void setMandatory(boolean mandatory) { isMandatory = mandatory; }
-    
-    public boolean isCompleted() { return isCompleted; }
-    public void setCompleted(boolean completed) { isCompleted = completed; }
     
     public List<Course> getPrereqCourses() { return prereqCourses; }
     public void setPrereqCourses(List<Course> prereqCourses) {

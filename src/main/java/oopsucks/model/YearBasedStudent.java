@@ -11,11 +11,10 @@ public class YearBasedStudent extends Student {
     public YearBasedStudent() {
     }
 
-    public YearBasedStudent(String userName, String userID, String email, String dob, String accountName, String password, Role role, String major, String faculty, String academicYear) {
-        super(userName, userID, email, dob, accountName, password, role, major, faculty);
+    public YearBasedStudent(String userName, String userID, String email, String dob, String password, Role role, String major, String institute, String academicYear) {
+        super(userName, userID, email, dob, password, role, major, institute);
         this.academicYear = academicYear;
     }
-
     public String getAcademicYear() { return academicYear; }
     public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
 }

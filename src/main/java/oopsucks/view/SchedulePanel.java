@@ -15,14 +15,14 @@ public class SchedulePanel extends JPanel {
     private JTable scheduleTable;
     private ClazzDAO clazzDAO;
     private UserDAO userDAO;
-    private String accountName;
+    private String userID;
     private JPanel cardPanel;
     private CardLayout cardLayout;
     private JLabel messageLabel;
     private JTextField semesterField;
 
-    public SchedulePanel(String accountName, JPanel cardPanel, CardLayout cardLayout) {
-        this.accountName = accountName;
+    public SchedulePanel(String userID, JPanel cardPanel, CardLayout cardLayout) {
+        this.userID = userID;
         this.cardPanel = cardPanel;
         this.cardLayout = cardLayout;
         this.clazzDAO = new ClazzDAO();
@@ -90,7 +90,7 @@ public class SchedulePanel extends JPanel {
         backButton.setFont(new Font("Arial", Font.BOLD, 16));
         backButton.setBackground(new Color(70, 130, 180));
         backButton.setForeground(Color.WHITE);
-        backButton.addActionListener(e -> cardLayout.show(cardPanel, "CreditBasedStudent"));
+        backButton.addActionListener(e -> cardLayout.show(cardPanel, "StudentPanel"));
         JPanel backPanel = new JPanel();
         backPanel.setBackground(Color.WHITE);
         backPanel.add(backButton);
@@ -109,7 +109,7 @@ public class SchedulePanel extends JPanel {
 
         try {
             int semester = Integer.parseInt(semesterInput);
-            Student student = userDAO.getStudent(accountName);
+            Student student = userDAO.getStudent(userID);
             if (student == null) {
                 showMessage("Không tìm thấy thông tin sinh viên!", Color.RED);
                 return;
@@ -153,7 +153,7 @@ public class SchedulePanel extends JPanel {
 
     // Chuyển sang ClazzDetailPanel
     public void showClassDetails(Clazz clazz, Student currentStudent) {
-        ClazzDetailPanel detailPanel = new ClazzDetailPanel(accountName, clazz, currentStudent, cardPanel, cardLayout);
+        ClazzDetailPanel detailPanel = new ClazzDetailPanel(userID, clazz, currentStudent, cardPanel, cardLayout);
         cardPanel.add(detailPanel, "ClazzDetailPanel");
         cardLayout.show(cardPanel, "ClazzDetailPanel");
     }
@@ -208,7 +208,7 @@ public class SchedulePanel extends JPanel {
                 try {
                     int clazzID = Integer.parseInt(scheduleTable.getValueAt(row, 0).toString());
                     Clazz clazz = clazzDAO.getClazzWithStudents(clazzID); // Lấy Clazz với danh sách sinh viên
-                    Student student = userDAO.getStudent(accountName);
+                    Student student = userDAO.getStudent(userID);
                     if (clazz != null && student != null) {
                         panel.showClassDetails(clazz, student);
                     } else {

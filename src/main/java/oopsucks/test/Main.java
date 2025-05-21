@@ -18,9 +18,7 @@ public class Main {
 
             LoginPanel loginPanel = new LoginPanel(cardPanel, cardLayout);
             cardPanel.add(loginPanel, "Login");
-
             frame.add(cardPanel);
-
             cardLayout.show(cardPanel, "Login");
 
             frame.setVisible(true);
