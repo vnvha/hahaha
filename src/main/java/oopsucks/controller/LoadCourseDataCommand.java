@@ -7,14 +7,14 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.util.List;
 
-public class LoadCourseDataCommand {
-    private final JPanel panel; // Sử dụng kiểu chung JPanel để hỗ trợ cả hai panel
+public class LoadCourseDataCommand extends BaseCommand<Void> {
+    private final JPanel panel;
     private final DefaultTableModel tableModel;
     private final UserDAO userDAO;
     private final CourseDAO courseDAO;
     private final ClazzDAO clazzDAO;
     private final GradeDAO gradeDAO;
-    private final boolean isCreditBasedSystem; //xác định hệ tín chỉ hay niên chế
+    private final boolean isCreditBasedSystem;
 
     public LoadCourseDataCommand(JPanel panel, DefaultTableModel tableModel,
                                  UserDAO userDAO, CourseDAO courseDAO, ClazzDAO clazzDAO, GradeDAO gradeDAO,
@@ -28,32 +28,29 @@ public class LoadCourseDataCommand {
         this.isCreditBasedSystem = isCreditBasedSystem;
     }
 
-    public void loadCourseData() {
+    @Override
+    protected Void doExecute() throws CommandException {
         tableModel.setRowCount(0);
         String studentID = getStudentID();
         Student student = userDAO.getStudent(studentID);
         if (student == null) {
-            setResultLabelText("Lỗi: Không thể tải thông tin sinh viên");
-            return;
+            throw new CommandException("Không thể tải thông tin sinh viên");
         }
 
         String studentInstitute = student.getInstitute();
         List<Course> allCourses = courseDAO.getAllCourses();
         if (allCourses == null || allCourses.isEmpty()) {
-            setResultLabelText("Lỗi: Không có khóa học nào để hiển thị");
-            return;
+            throw new CommandException("Không có khóa học nào để hiển thị");
         }
 
         int totalCreditsEarned = 0;
 
         for (Course course : allCourses) {
             if (!course.getInstitute().equals(studentInstitute)) {
-                continue; // Bỏ qua nếu institute không khớp
+                continue;
             }
 
             Object[] rowData = isCreditBasedSystem ? new Object[10] : new Object[8];
-
-            // Điền thông tin cơ bản của Course
             rowData[0] = course.getCourseID();
             rowData[1] = course.getCourseName();
             if (isCreditBasedSystem) {
@@ -63,12 +60,10 @@ public class LoadCourseDataCommand {
                 rowData[2] = course.getInstitute();
             }
 
-            // Lấy tất cả các Grade cho sinh viên và khóa học
             List<Grade> grades = gradeDAO.getGradesByStudentAndCourse(student.getUserID(), course.getCourseID());
             Grade bestGrade = null;
             Float highestGradePoint = null;
 
-            // Tìm Grade có totalScore cao nhất
             for (Grade grade : grades) {
                 Float gradePoint = grade.getGradePoint();
                 if (gradePoint != null && (highestGradePoint == null || gradePoint > highestGradePoint)) {
@@ -77,7 +72,6 @@ public class LoadCourseDataCommand {
                 }
             }
 
-            // Điền thông tin điểm
             int baseIndex = isCreditBasedSystem ? 4 : 3;
             if (bestGrade != null) {
                 rowData[baseIndex] = formatGrade(bestGrade.getMidtermScore());
@@ -86,12 +80,8 @@ public class LoadCourseDataCommand {
                 rowData[baseIndex + 3] = bestGrade.getLetterGrade();
                 rowData[baseIndex + 4] = formatGrade(bestGrade.getGradePoint());
 
-                // Tính tổng tín chỉ cho hệ tín chỉ
-                if (isCreditBasedSystem && bestGrade.getLetterGrade() != null) {
-                    String letterGrade = bestGrade.getLetterGrade();
-                    if (!letterGrade.equals("F")) {
-                        totalCreditsEarned += course.getCreditNumber();
-                    }
+                if (isCreditBasedSystem && bestGrade.getLetterGrade() != null && !bestGrade.getLetterGrade().equals("F")) {
+                    totalCreditsEarned += course.getCreditNumber();
                 }
             } else {
                 rowData[baseIndex] = "";
@@ -108,10 +98,17 @@ public class LoadCourseDataCommand {
             tableModel.addRow(rowData);
         }
 
-        // Cập nhật tổng số tín chỉ cho hệ tín chỉ
         if (isCreditBasedSystem && student instanceof CreditBasedStudent) {
             updateTotalCredits((CreditBasedStudent) student, totalCreditsEarned);
         }
+
+        return null;
+    }
+
+    @Override
+    public boolean validate() {
+        return panel != null && tableModel != null && userDAO != null && courseDAO != null && 
+               getStudentID() != null && !getStudentID().trim().isEmpty();
     }
 
     private void updateTotalCredits(CreditBasedStudent student, int totalCreditsEarned) {
@@ -120,10 +117,7 @@ public class LoadCourseDataCommand {
     }
 
     private String formatGrade(Float grade) {
-        if (grade == null) {
-            return "";
-        }
-        return String.format("%.2f", grade);
+        return grade != null ? String.format("%.2f", grade) : "";
     }
 
     private String getStudentID() {
@@ -132,14 +126,6 @@ public class LoadCourseDataCommand {
         } else if (panel instanceof TrainingProgramPanel) {
             return ((TrainingProgramPanel) panel).studentID();
         }
-        throw new IllegalStateException("Panel không được hỗ trợ");
-    }
-
-    private void setResultLabelText(String text) {
-        if (panel instanceof AnnualTrainingProgramPanel) {
-            ((AnnualTrainingProgramPanel) panel).getResultLabel().setText(text);
-        } else if (panel instanceof TrainingProgramPanel) {
-            ((TrainingProgramPanel) panel).getResultLabel().setText(text);
-        }
+        return null;
     }
 }

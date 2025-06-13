@@ -290,8 +290,8 @@ public class TeacherPanel extends JPanel {
             boolean hasClasses = false;
             for (Clazz clazz : clazzes) {
                 if (clazz.getSemester() == semester) {
-                    JButton clazzButton = new JButton(String.format("%s - %s (%s)",
-                        clazz.getCourse().getCourseID(), clazz.getCourse().getCourseName(), clazz.getRoom()));
+                    JButton clazzButton = new JButton(String.format("%d - %s - %s (%s - %s)", clazz.getClazzID(),
+                        clazz.getCourse().getCourseID(), clazz.getCourse().getCourseName(), clazz.getRoom(), clazz.getDayOfWeek()));
                     clazzButton.setFont(new Font("Arial", Font.PLAIN, 16));
                     clazzButton.setBackground(new Color(70, 130, 180));
                     clazzButton.setForeground(Color.WHITE);

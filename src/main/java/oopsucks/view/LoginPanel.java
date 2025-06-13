@@ -91,15 +91,15 @@ public class LoginPanel extends JPanel {
         add(passwordField, gbc);
 
         JButton forgotPasswordButton = new JButton("Quên mật khẩu");
-        forgotPasswordButton.setFont(new Font("Arial", Font.BOLD,14)); 
+        forgotPasswordButton.setFont(new Font("Arial", Font.BOLD, 14)); 
         forgotPasswordButton.setBackground(Color.WHITE); 
-        forgotPasswordButton.setForeground(	new Color(100, 149, 237)); 
+        forgotPasswordButton.setForeground(new Color(100, 149, 237)); 
         forgotPasswordButton.setBorderPainted(false); 
         forgotPasswordButton.setContentAreaFilled(false);
         gbc.gridx = 1;
         gbc.gridy = 6; 
         gbc.gridwidth = 1;
-        gbc.anchor = GridBagConstraints.LINE_END; // Căn phải
+        gbc.anchor = GridBagConstraints.LINE_END;
         add(forgotPasswordButton, gbc);
 
         errorLabel = new JLabel("");
@@ -131,27 +131,33 @@ public class LoginPanel extends JPanel {
                 return;
             }
 
-            Command loginCommand = new LoginCommand(userID, password, role);
-            if (loginCommand.execute()) {
-                switch (role) {
-                    case CREDITBASEDSTUDENT:
-                        cardPanel.add(new StudentPanel(userID, cardPanel, cardLayout), "StudentPanel");
-                        cardLayout.show(cardPanel, "StudentPanel");
-                        break;
-                    case YEARBASEDSTUDENT:
-                    	cardPanel.add(new StudentPanel(userID, cardPanel, cardLayout), "StudentPanel");
-                        cardLayout.show(cardPanel, "StudentPanel");
-                        break;
-                    case TEACHER:
-                        cardPanel.add(new TeacherPanel(userID, cardPanel, cardLayout), "Teacher");
-                        cardLayout.show(cardPanel, "Teacher");
-                        break;
+            try {
+                Command loginCommand = new LoginCommand(userID, password, role);
+                if (loginCommand.validate()) {
+                    boolean loginSuccess = (Boolean) loginCommand.execute();
+                    if (loginSuccess) {
+                        switch (role) {
+                            case CREDITBASEDSTUDENT:
+                            case YEARBASEDSTUDENT:
+                                cardPanel.add(new StudentPanel(userID, cardPanel, cardLayout), "StudentPanel");
+                                cardLayout.show(cardPanel, "StudentPanel");
+                                break;
+                            case TEACHER:
+                                cardPanel.add(new TeacherPanel(userID, cardPanel, cardLayout), "Teacher");
+                                cardLayout.show(cardPanel, "Teacher");
+                                break;
+                        }
+                        usernameField.setText("");
+                        passwordField.setText("");
+                        roleGroup.clearSelection();
+                    } else {
+                        errorLabel.setText("Đăng nhập thất bại!");
+                    }
+                } else {
+                    errorLabel.setText("Vui lòng nhập đầy đủ thông tin!");
                 }
-                usernameField.setText("");
-                passwordField.setText("");
-                roleGroup.clearSelection();
-            } else {
-                errorLabel.setText("Tài khoản không có hoặc nhập sai mật khẩu!");
+            } catch (CommandException ex) {
+                errorLabel.setText(ex.getMessage());
             }
         });
 

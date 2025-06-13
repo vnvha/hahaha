@@ -123,20 +123,28 @@ public class AnnualTrainingProgramPanel extends JPanel {
     }
 
     private void loadCourseData() {
-        LoadCourseDataCommand loadCommand = new LoadCourseDataCommand(
-            this, tableModel, userDAO, courseDAO, clazzDAO, gradeDAO, false);
-        loadCommand.loadCourseData();
+        try {
+            new LoadCourseDataCommand(this, tableModel, userDAO, courseDAO, clazzDAO, gradeDAO, false).execute();
+        } catch (Exception e) {
+            getResultLabel().setText("Lỗi: " + e.getMessage());
+        }
     }
 
     private void calculateAndDisplayGPA() {
-        Student student = userDAO.getStudent(studentID);
-        if (student == null) {
-            gpaLabel.setText("Điểm TBTL: N/A");
-            return;
+        try {
+            Student student = userDAO.getStudent(studentID);
+            CalculateGPACommand gpaCommand = new CalculateGPACommand(student, courseDAO, clazzDAO, gradeDAO, false);
+            if (!gpaCommand.validate()) {
+                gpaLabel.setText("Điểm TBTL: N/A");
+                return;
+            }
+
+            CalculateGPACommand.GPAResult result = gpaCommand.execute();
+            gpaLabel.setText(result.getMessage());
+        } catch (CommandException e) {
+            gpaLabel.setText("Lỗi: Không thể tính GPA");
+            System.err.println("Error calculating GPA: " + e.getMessage());
         }
-        CalculateGPACommand gpaCommand = new CalculateGPACommand(student, courseDAO, clazzDAO, gradeDAO, false);
-        CalculateGPACommand.GPAResult result = gpaCommand.execute();
-        gpaLabel.setText(result.getMessage());
     }
 
     private void checkGraduation() {
@@ -163,11 +171,17 @@ public class AnnualTrainingProgramPanel extends JPanel {
             }
         }
 
-        CheckAnnualGraduationCommand gradCommand = new CheckAnnualGraduationCommand(student, studentCourses, gradeDAO);
-        CheckAnnualGraduationCommand.Result result = gradCommand.execute();
-
-        resultLabel.setText(result.getMessage());
-        resultLabel.setForeground(result.isQualified() ? new Color(0, 128, 0) : new Color(200, 0, 0));
+        try {
+            CheckAnnualGraduationCommand gradCommand = new CheckAnnualGraduationCommand(student, studentCourses, gradeDAO);
+            CheckAnnualGraduationCommand.Result result = gradCommand.execute();
+  
+            resultLabel.setText(result.getMessage());
+            resultLabel.setForeground(result.isQualified() ? new Color(0, 128, 0) : new Color(200, 0, 0));
+            
+        } catch (CommandException e) {
+            // Handle the exception (e.g., log error or display error message)
+            System.err.println("Error checking graduation status: " + e.getMessage());
+        }
     }
     
     private void checkTuition() {

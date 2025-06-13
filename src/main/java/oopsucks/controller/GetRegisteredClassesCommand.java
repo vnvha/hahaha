@@ -4,7 +4,7 @@ import oopsucks.model.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GetRegisteredClassesCommand {
+public class GetRegisteredClassesCommand extends BaseCommand<List<Clazz>> {
     private ClazzDAO clazzDAO;
     private UserDAO userDAO;
     private String studentUserID;
@@ -15,16 +15,21 @@ public class GetRegisteredClassesCommand {
         this.studentUserID = studentUserID;
     }
 
-    public List<Clazz> execute() {
+    @Override
+    protected List<Clazz> doExecute() throws CommandException {
         try {
-            Student student = userDAO.getStudent(studentUserID); // Sử dụng phương thức mới
+            Student student = userDAO.getStudent(studentUserID);
             if (student == null) {
-                return new ArrayList<>();
+                throw new CommandException("Không tìm thấy thông tin sinh viên với userID: " + studentUserID);
             }
             return clazzDAO.getClazzesByStudent(student);
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new CommandException("Lỗi khi lấy danh sách lớp đã đăng ký: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public boolean validate() {
+        return studentUserID != null && !studentUserID.trim().isEmpty();
     }
 }

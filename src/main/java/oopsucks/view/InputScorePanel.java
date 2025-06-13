@@ -2,6 +2,7 @@ package oopsucks.view;
 
 import oopsucks.model.*;
 import oopsucks.controller.InputScoreCommand;
+import oopsucks.controller.CommandException;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -14,7 +15,6 @@ import java.util.TimerTask;
 
 public class InputScorePanel extends JPanel {
     private Clazz clazz;
-    private InputScoreCommand command;
     private JPanel cardPanel;
     private CardLayout cardLayout;
     private JTable scoreTable;
@@ -25,7 +25,6 @@ public class InputScorePanel extends JPanel {
         this.clazz = clazz;
         this.cardPanel = cardPanel;
         this.cardLayout = cardLayout;
-        this.command = new InputScoreCommand();
         initializeUI();
     }
 
@@ -120,6 +119,8 @@ public class InputScorePanel extends JPanel {
 
     private void confirmAndSaveScores() {
         List<Grade> gradesToSave = new ArrayList<>();
+        InputScoreCommand command = new InputScoreCommand(gradesToSave); // Khởi tạo command với gradesToSave
+
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             String studentId = (String) tableModel.getValueAt(i, 0);
             String midtermStr = tableModel.getValueAt(i, 2).toString().trim();
@@ -154,19 +155,17 @@ public class InputScorePanel extends JPanel {
         }
 
         try {
-            command.saveScores(gradesToSave);
+            command.execute(); // Gọi execute thay vì saveScores
             showNotification("Đã lưu tất cả điểm thành công!", 3000);
             refreshTable();
-        } catch (IllegalArgumentException ex) {
-            showNotification(ex.getMessage(), 4000);
-        } catch (Exception ex) {
+        } catch (CommandException ex) {
             showNotification("Lỗi khi lưu điểm: " + ex.getMessage(), 4000);
         }
     }
 
-
     private void refreshTable() {
         tableModel.setRowCount(0);
+        InputScoreCommand command = new InputScoreCommand(new ArrayList<>()); // Tạo command tạm thời để lấy dữ liệu
         List<Grade> grades = command.getGradesByClazz(clazz);
         for (Grade grade : grades) {
             Student student = grade.getStudent();

@@ -1,49 +1,47 @@
 package oopsucks.controller;
 
 import oopsucks.model.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class CheckGraduationCommand {
+public class CheckGraduationCommand extends BaseCommand<CheckGraduationCommand.Result> {
     private final Student student;
     private final List<Course> mandatoryCourses;
     private final List<Course> selectedOptionalCourses;
     private final ClazzDAO clazzDAO;
     private final GradeDAO gradeDAO;
-    private final TuitionFeeDAO tuitionFeeDAO; // Thêm TuitionFeeDAO
+    private final TuitionFeeDAO tuitionFeeDAO;
 
     public CheckGraduationCommand(Student student,
                                   List<Course> mandatoryCourses,
                                   List<Course> selectedOptionalCourses,
                                   ClazzDAO clazzDAO,
                                   GradeDAO gradeDAO,
-                                  TuitionFeeDAO tuitionFeeDAO) { // Thêm tham số TuitionFeeDAO
+                                  TuitionFeeDAO tuitionFeeDAO) {
         this.student = student;
         this.mandatoryCourses = mandatoryCourses;
         this.selectedOptionalCourses = selectedOptionalCourses;
         this.clazzDAO = clazzDAO;
         this.gradeDAO = gradeDAO;
-        this.tuitionFeeDAO = tuitionFeeDAO; // Lưu lại tham số TuitionFeeDAO
+        this.tuitionFeeDAO = tuitionFeeDAO;
     }
 
-    public Result execute() {
+    @Override
+    protected Result doExecute() throws CommandException {
         List<Course> coursesToCheck = new ArrayList<>(mandatoryCourses);
         coursesToCheck.addAll(selectedOptionalCourses);
 
         boolean allScoresValid = true;
         List<String> invalidCoursesList = new ArrayList<>();
-
         float totalWeightedPoints = 0;
         int totalCredits = 0;
         String studentInstitute = student.getInstitute();
 
         for (Course course : coursesToCheck) {
-            // Chỉ kiểm tra và tính điểm cho các khóa học có cùng institute với sinh viên
             if (!course.getInstitute().equals(studentInstitute)) {
                 continue;
             }
-            
+
             Clazz registeredClazz = findRegisteredClazz(student, course);
             if (registeredClazz == null) {
                 allScoresValid = false;
@@ -76,7 +74,7 @@ public class CheckGraduationCommand {
         List<TuitionFee> tuitionFees = tuitionFeeDAO.getTuitionFeesByStudent(student.getUserID());
         boolean hasPendingTuition = false;
         List<Integer> pendingSemesters = new ArrayList<>();
-        
+
         for (TuitionFee fee : tuitionFees) {
             if (!fee.getStatus()) { // Nếu chưa thanh toán
                 hasPendingTuition = true;
@@ -84,39 +82,58 @@ public class CheckGraduationCommand {
             }
         }
 
+        // Tính GPA
         float gpa = totalCredits > 0 ? totalWeightedPoints / totalCredits : 0.0f;
 
-        if (allScoresValid && !hasPendingTuition && totalCredits > 0) {
-            return new Result(true, "Thỏa mãn điều kiện tốt nghiệp. GPA: " + String.format("%.2f", gpa), gpa);
+        // Xác định điều kiện tốt nghiệp
+        boolean qualified = allScoresValid && !hasPendingTuition && totalCredits > 0;
+
+        // Xây dựng thông điệp
+        StringBuilder message = new StringBuilder();
+        if (qualified) {
+            message.append("Đủ điều kiện tốt nghiệp! Điểm trung bình tích lũy: ")
+                   .append(String.format("%.2f", gpa));
         } else {
-            StringBuilder message = new StringBuilder("Không thỏa mãn điều kiện tốt nghiệp\n");
+            message.append("Chưa đủ điều kiện tốt nghiệp: ");
 
             if (!allScoresValid) {
-                message.append("Các môn không đạt:\n");
-                for (String course : invalidCoursesList) {
-                    message.append("- ").append(course).append("\n");
+                message.append("\nCác môn chưa hoàn thành: ");
+                for (int i = 0; i < invalidCoursesList.size(); i++) {
+                    message.append(invalidCoursesList.get(i));
+                    if (i < invalidCoursesList.size() - 1) {
+                        message.append(", ");
+                    }
                 }
             }
 
             if (hasPendingTuition) {
-                message.append("Còn nợ học phí học kỳ: ");
+                message.append("\nCòn nợ học phí học kỳ: ");
                 for (int i = 0; i < pendingSemesters.size(); i++) {
                     message.append(pendingSemesters.get(i));
                     if (i < pendingSemesters.size() - 1) {
                         message.append(", ");
                     }
                 }
-                message.append("\n");
             }
 
             if (totalCredits == 0) {
-                message.append("Không có điểm hợp lệ để tính GPA.");
+                message.append("\nKhông có điểm hợp lệ để tính GPA.");
             } else {
-                message.append("GPA: ").append(String.format("%.2f", gpa));
+                message.append("\nĐiểm trung bình tích lũy: ").append(String.format("%.2f", gpa));
             }
-
-            return new Result(false, message.toString(), gpa);
         }
+
+        return new Result(message.toString(), qualified, gpa);
+    }
+
+    @Override
+    public boolean validate() {
+        return student != null &&
+               mandatoryCourses != null && !mandatoryCourses.isEmpty() &&
+               selectedOptionalCourses != null &&
+               clazzDAO != null &&
+               gradeDAO != null &&
+               tuitionFeeDAO != null;
     }
 
     private Clazz findRegisteredClazz(Student student, Course course) {
@@ -131,22 +148,22 @@ public class CheckGraduationCommand {
     }
 
     public static class Result {
-        private final boolean isQualified;
         private final String message;
+        private final boolean qualified;
         private final float gpa;
 
-        public Result(boolean isQualified, String message, float gpa) {
-            this.isQualified = isQualified;
+        public Result(String message, boolean qualified, float gpa) {
             this.message = message;
+            this.qualified = qualified;
             this.gpa = gpa;
-        }
-
-        public boolean isQualified() {
-            return isQualified;
         }
 
         public String getMessage() {
             return message;
+        }
+
+        public boolean isQualified() {
+            return qualified;
         }
 
         public float getGPA() {

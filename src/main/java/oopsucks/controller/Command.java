@@ -1,5 +1,6 @@
 package oopsucks.controller;
 
-public interface Command {
-	boolean execute();
+public interface Command<T> {
+    T execute() throws CommandException;
+    boolean validate();
 }

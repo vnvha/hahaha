@@ -5,10 +5,10 @@ import org.hibernate.Transaction;
 import oopsucks.model.*;
 import java.util.List;
 
-public class FinishRegistrationCommand {
+public class FinishRegistrationCommand extends BaseCommand<String> {
     private ClazzDAO clazzDAO;
     private GradeDAO gradeDAO;
-    private String studentUserID; 
+    private String studentUserID;
 
     public FinishRegistrationCommand(String studentUserID) {
         this.clazzDAO = new ClazzDAO();
@@ -16,7 +16,8 @@ public class FinishRegistrationCommand {
         this.studentUserID = studentUserID;
     }
 
-    public String execute() {
+    @Override
+    protected String doExecute() throws CommandException {
         Transaction transaction = null;
         Session session = null;
         try {
@@ -24,16 +25,16 @@ public class FinishRegistrationCommand {
             transaction = session.beginTransaction();
 
             Student student = session.createQuery(
-                "FROM Student WHERE userID = :userID", Student.class) // Sửa truy vấn
+                "FROM Student WHERE userID = :userID", Student.class)
                 .setParameter("userID", studentUserID)
                 .uniqueResult();
             if (student == null) {
-                return "Không tìm thấy thông tin sinh viên với userID: " + studentUserID;
+                throw new CommandException("Không tìm thấy thông tin sinh viên với userID: " + studentUserID);
             }
 
             List<Clazz> registeredClasses = clazzDAO.getClazzesByStudent(student);
             if (registeredClasses.isEmpty()) {
-                return "Bạn chưa đăng ký lớp nào!";
+                throw new CommandException("Bạn chưa đăng ký lớp nào!");
             }
 
             GradeInitializer gradeInitializer = new GradeInitializer();
@@ -47,35 +48,23 @@ public class FinishRegistrationCommand {
                     System.out.println("Đã cập nhật điểm cho sinh viên " + student.getUserID() + " trong lớp " + clazz.getClazzID());
                 }
             }
-         // Sau phần lưu điểm
-/*            
-         // Tính và lưu học phí cho học kỳ hiện tại
-            Integer currentSemester = null;
-            if (!registeredClasses.isEmpty()) {
-                currentSemester = registeredClasses.get(0).getSemester();
-            }
-         TuitionFeeDAO tuitionFeeDAO = new TuitionFeeDAO();
-         TuitionFee tuitionFee = tuitionFeeDAO.calculateAndSaveTuitionFee(student.getUserID(), currentSemester);
-         if (tuitionFee != null) {
-             System.out.println("Đã tính học phí cho sinh viên " + student.getUserID() + 
-                                " học kỳ " + currentSemester + ": " + tuitionFee.getTuition());
-         } else {
-             System.out.println("Không thể tính học phí cho sinh viên " + student.getUserID() + 
-                                " học kỳ " + currentSemester);
-         }
-*/
+
             transaction.commit();
             return "Đăng ký học phần thành công!";
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
             }
-            e.printStackTrace();
-            return "Lỗi khi hoàn thành đăng ký: " + e.getMessage();
+            throw new CommandException("Lỗi khi hoàn thành đăng ký: " + e.getMessage(), e);
         } finally {
             if (session != null && session.isOpen()) {
                 session.close();
             }
         }
+    }
+
+    @Override
+    public boolean validate() {
+        return studentUserID != null && !studentUserID.trim().isEmpty();
     }
 }

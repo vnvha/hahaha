@@ -4,10 +4,7 @@ import oopsucks.model.*;
 import java.util.List;
 import java.util.ArrayList;
 
-/**
- * Command class to check graduation requirements for annual system students
- */
-public class CheckAnnualGraduationCommand {
+public class CheckAnnualGraduationCommand extends BaseCommand<CheckAnnualGraduationCommand.Result> {
     private final Student student;
     private final List<Course> courses;
     private final GradeDAO gradeDAO;
@@ -18,17 +15,8 @@ public class CheckAnnualGraduationCommand {
         this.gradeDAO = gradeDAO;
     }
     
-    /**
-     * Executes the graduation check for annual system students
-     * Annual students must:
-     * 1. Complete all courses (grade >= D)
-     * 2. Have a cumulative GPA >= 1.0
-     */
-    public Result execute() {
-        if (student == null || courses == null || courses.isEmpty()) {
-            return new Result("Không thể kiểm tra: Thiếu thông tin sinh viên hoặc khóa học", false);
-        }
-        
+    @Override
+    protected Result doExecute() throws CommandException {
         // Kiểm tra hoàn thành tất cả các môn (>=D)
         boolean allCoursesCompleted = true;
         List<String> failedCourses = new ArrayList<>();
@@ -78,7 +66,7 @@ public class CheckAnnualGraduationCommand {
         }
         
         float gpa = (courseCount > 0) ? (totalPoints / courseCount) : 0.0f;
-        boolean gpaQualified = gpa >= 1.0; // Giả sử điểm trung bình tích lũy phải >= 1.0
+        boolean gpaQualified = gpa >= 5.0; // Giả sử điểm trung bình tích lũy phải >= 5.0
         
         StringBuilder message = new StringBuilder();
         boolean qualified = allCoursesCompleted && gpaQualified;
@@ -101,11 +89,16 @@ public class CheckAnnualGraduationCommand {
             
             if (!gpaQualified) {
                 message.append("\nĐiểm trung bình tích lũy: ").append(String.format("%.2f", gpa))
-                       .append(" (yêu cầu >= 1.0)");
+                       .append(" (yêu cầu >= 5.0)");
             }
         }
         
         return new Result(message.toString(), qualified);
+    }
+    
+    @Override
+    public boolean validate() {
+        return student != null && courses != null && !courses.isEmpty() && gradeDAO != null;
     }
     
     /**

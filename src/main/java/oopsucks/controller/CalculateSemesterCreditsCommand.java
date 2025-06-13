@@ -9,14 +9,6 @@ import java.util.List;
  * Command class to calculate the total credits for a student in a specific semester
  */
 public class CalculateSemesterCreditsCommand {
-    
-    /**
-     * Calculates the total credits for a student in a specific semester
-     *
-     * @param studentId ID of the student
-     * @param semester Semester number
-     * @return Total number of credits for the semester
-     */
     public int calculateSemesterCredits(String studentId, int semester) {
         int totalCredits = 0;
         
@@ -50,12 +42,6 @@ public class CalculateSemesterCreditsCommand {
         return totalCredits;
     }
     
-    /**
-     * Gets a list of semesters that the student is enrolled in
-     * 
-     * @param studentId ID of the student
-     * @return List of semester numbers
-     */
     public List<Integer> getStudentSemesters(String studentId) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             String hql = "SELECT DISTINCT c.semester FROM Clazz c " +

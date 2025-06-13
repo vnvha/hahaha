@@ -28,8 +28,6 @@ public class ClassRegistrationPanel extends JPanel {
         this.cardPanel = cardPanel;
         this.cardLayout = cardLayout;
         this.clazzDAO = new ClazzDAO();
-        this.registerClassCommand = new RegisterClassCommand(userID);
-        this.deleteClassCommand = new DeleteClassCommand(userID);
         this.getRegisteredClassesCommand = new GetRegisteredClassesCommand(userID);
         this.finishRegistrationCommand = new FinishRegistrationCommand(userID);
         setLayout(new BorderLayout());
@@ -182,48 +180,54 @@ public class ClassRegistrationPanel extends JPanel {
     public void populateRegisteredClasses() {
         DefaultTableModel model = (DefaultTableModel) registeredClassesTable.getModel();
         model.setRowCount(0);
-        if (selectedSemester == null) return;
-
-        List<Clazz> registeredClasses = getRegisteredClassesCommand.execute();
-        boolean hasClasses = false;
-        for (Clazz clazz : registeredClasses) {
-            if (clazz.getSemester() == selectedSemester) {
-                model.addRow(new Object[]{
-                    false,
-                    clazz.getClazzID(),
-                    clazz.getCourse() != null ? clazz.getCourse().getCourseID() : "N/A",
-                    clazz.getStartTime(),
-                    clazz.getEndTime(),
-                    clazz.getDayOfWeek(),
-                    clazz.getRoom()
-                });
-                hasClasses = true;
-            }
+        if (selectedSemester == null) {
+            showMessage("Vui lòng chọn kỳ học!", Color.RED);
+            return;
         }
-        if (!hasClasses) {
-            showMessage("Bạn chưa đăng ký lớp nào cho kỳ " + selectedSemester + "!", Color.RED);
+
+        try {
+            List<Clazz> registeredClasses = getRegisteredClassesCommand.execute();
+            boolean hasClasses = false;
+            for (Clazz clazz : registeredClasses) {
+                if (clazz.getSemester() == selectedSemester) {
+                    model.addRow(new Object[]{
+                        false,
+                        clazz.getClazzID(),
+                        clazz.getCourse() != null ? clazz.getCourse().getCourseID() : "N/A",
+                        clazz.getStartTime(),
+                        clazz.getEndTime(),
+                        clazz.getDayOfWeek(),
+                        clazz.getRoom()
+                    });
+                    hasClasses = true;
+                }
+            }
+            if (!hasClasses) {
+                showMessage("Bạn chưa đăng ký lớp nào cho kỳ " + selectedSemester + "!", Color.RED);
+            }
+        } catch (Exception e) {
+            showMessage("Lỗi: " + e.getMessage(), Color.RED);
         }
     }
 
     private void registerClass() {
+        String input = clazzIdField.getText().trim();
+        if (input.isEmpty()) {
+            showMessage("Vui lòng nhập mã lớp!", Color.RED);
+            return;
+        }
+
         try {
-            String input = clazzIdField.getText().trim();
-            if (input.isEmpty()) {
-                showMessage("Vui lòng nhập mã lớp!", Color.RED);
-                return;
-            }
             Integer clazzID = Integer.parseInt(input);
-            String result = registerClassCommand.execute(clazzID);
+            String result = new RegisterClassCommand(userID, clazzID).execute();
+            showMessage(result, result.contains("thành công") ? new Color(0, 128, 0) : Color.RED);
             if (result.contains("thành công")) {
-                showMessage(result, new Color(0, 128, 0));
                 populateRegisteredClasses();
                 populateAvailableClasses();
                 clazzIdField.setText("");
-            } else {
-                showMessage(result, Color.RED);
             }
-        } catch (NumberFormatException e) {
-            showMessage("Clazz ID phải là số nguyên!", Color.RED);
+        } catch (Exception e) {
+            showMessage("Lỗi: " + e.getMessage(), Color.RED);
         }
     }
 
@@ -231,12 +235,15 @@ public class ClassRegistrationPanel extends JPanel {
         DefaultTableModel model = (DefaultTableModel) registeredClassesTable.getModel();
         boolean found = false;
         for (int i = model.getRowCount() - 1; i >= 0; i--) {
-            Boolean isSelected = (Boolean) model.getValueAt(i, 0);
-            if (Boolean.TRUE.equals(isSelected)) {
-                Integer clazzID = Integer.parseInt(model.getValueAt(i, 1).toString());
-                String result = deleteClassCommand.execute(clazzID);
-                showMessage(result, result.contains("thành công") ? new Color(0, 128, 0) : Color.RED);
-                found = true;
+            if (Boolean.TRUE.equals(model.getValueAt(i, 0))) {
+                try {
+                    Integer clazzID = Integer.parseInt(model.getValueAt(i, 1).toString());
+                    String result = new DeleteClassCommand(userID, clazzID).execute();
+                    showMessage(result, result.contains("thành công") ? new Color(0, 128, 0) : Color.RED);
+                    found = true;
+                } catch (Exception e) {
+                    showMessage("Lỗi: " + e.getMessage(), Color.RED);
+                }
             }
         }
         if (!found) {
@@ -245,11 +252,11 @@ public class ClassRegistrationPanel extends JPanel {
         populateRegisteredClasses();
         populateAvailableClasses();
     }
-
+    
     private void finishRegistration() {
         SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
-            protected String doInBackground() {
+            protected String doInBackground() throws Exception {
                 return finishRegistrationCommand.execute();
             }
 
@@ -265,8 +272,7 @@ public class ClassRegistrationPanel extends JPanel {
                         showMessage(result, Color.RED);
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    showMessage("Có lỗi xảy ra: " + e.getMessage(), Color.RED);
+                    showMessage("Lỗi: " + e.getMessage(), Color.RED);
                 }
             }
         };
