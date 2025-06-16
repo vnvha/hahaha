@@ -9,7 +9,6 @@ public class CalculateTuitionFeeCommand extends BaseCommand<TuitionFee> {
     private ClazzDAO clazzDAO;
     private String studentId;
     private Integer semester;
-    private Double customCreditFee;
 
     public CalculateTuitionFeeCommand(String studentId, Integer semester) {
         this.tuitionFeeDAO = new TuitionFeeDAO();
@@ -17,16 +16,6 @@ public class CalculateTuitionFeeCommand extends BaseCommand<TuitionFee> {
         this.clazzDAO = new ClazzDAO();
         this.studentId = studentId;
         this.semester = semester;
-        this.customCreditFee = null;
-    }
-
-    public CalculateTuitionFeeCommand(String studentId, Integer semester, Double customCreditFee) {
-        this.tuitionFeeDAO = new TuitionFeeDAO();
-        this.userDAO = new UserDAO();
-        this.clazzDAO = new ClazzDAO();
-        this.studentId = studentId;
-        this.semester = semester;
-        this.customCreditFee = customCreditFee;
     }
 
     @Override
@@ -74,9 +63,6 @@ public class CalculateTuitionFeeCommand extends BaseCommand<TuitionFee> {
         if (semester == null || semester <= 0) {
             return false;
         }
-        if (customCreditFee != null && customCreditFee <= 0) {
-            return false;
-        }
         
         // Validate student exists
         Student student = userDAO.getStudent(studentId);
@@ -110,30 +96,26 @@ public class CalculateTuitionFeeCommand extends BaseCommand<TuitionFee> {
             throws CommandException {
         existingFee.setTotalChargeableCredits(totalChargeableCredits);
         
-        if (customCreditFee != null) {
-            existingFee.setCreditFee(customCreditFee);
-        } else {
-            Student student = userDAO.getStudent(studentId);
-            if (student == null || student.getMajor() == null) {
-                throw new CommandException("Không tìm thấy thông tin ngành học cho sinh viên: " + studentId);
-            }
-            existingFee.setCreditFee(tuitionFeeDAO.getCreditFeeByMajor(student.getMajor()));
-        }
+
+       Student student = userDAO.getStudent(studentId);
+       if (student == null || student.getMajor() == null) {
+             throw new CommandException("Không tìm thấy thông tin ngành học cho sinh viên: " + studentId);
+       }
+       existingFee.setCreditFee(tuitionFeeDAO.getCreditFeeByMajor(student.getMajor()));
+        
         
         return existingFee;
     }
     
     private TuitionFee createNewTuitionFee(int totalChargeableCredits) throws CommandException {
         Double creditFee;
-        if (customCreditFee != null) {
-            creditFee = customCreditFee;
-        } else {
-            Student student = userDAO.getStudent(studentId);
-            if (student == null || student.getMajor() == null) {
-                throw new CommandException("Không tìm thấy thông tin ngành học cho sinh viên: " + studentId);
-            }
-            creditFee = tuitionFeeDAO.getCreditFeeByMajor(student.getMajor());
+
+        Student student = userDAO.getStudent(studentId);
+        if (student == null || student.getMajor() == null) {
+            throw new CommandException("Không tìm thấy thông tin ngành học cho sinh viên: " + studentId);
         }
+        creditFee = tuitionFeeDAO.getCreditFeeByMajor(student.getMajor());
+        
         return new TuitionFee(studentId, semester, creditFee, totalChargeableCredits);
     }
 }

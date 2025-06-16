@@ -101,15 +101,4 @@ public class TuitionFeeDAO {
             return null;
         }
     }
-
-    public TuitionFee calculateAndSaveTuitionFee(String studentId, Integer semester, Double creditFee) {
-        try {
-            CalculateTuitionFeeCommand command = new CalculateTuitionFeeCommand(studentId, semester, creditFee);
-            return command.execute();
-        } catch (CommandException e) {
-            System.err.println("Lỗi khi tính học phí: " + e.getMessage());
-            return null;
-        }
-    }
-
 }
