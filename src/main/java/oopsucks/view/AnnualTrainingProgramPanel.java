@@ -124,7 +124,12 @@ public class AnnualTrainingProgramPanel extends JPanel {
 
     private void loadCourseData() {
         try {
-            new LoadCourseDataCommand(this, tableModel, userDAO, courseDAO, clazzDAO, gradeDAO, false).execute();
+            new LoadCourseDataCommand(
+                tableModel,
+                userDAO, courseDAO, clazzDAO, gradeDAO,
+                false,
+                studentID 
+            ).execute();
         } catch (Exception e) {
             getResultLabel().setText("Lỗi: " + e.getMessage());
         }
@@ -194,9 +199,9 @@ public class AnnualTrainingProgramPanel extends JPanel {
         }
 
         // Tạo và thêm TuitionFeePanel
-        AnnualStudentTuitionFeePanel annualStudentTuitionPanel = new AnnualStudentTuitionFeePanel(studentID, cardPanel, cardLayout, annualTuitionFeeDAO, userDAO);
-        cardPanel.add(annualStudentTuitionPanel, "annualStudentTuitionPanel");
-        cardLayout.show(cardPanel, "annualStudentTuitionPanel");
+        StudentTuitionFeePanel studentTuitionPanel = new StudentTuitionFeePanel(studentID, cardPanel, cardLayout, new TuitionFeeDAO(), userDAO, true);
+        cardPanel.add(studentTuitionPanel, "studentCreditTuitionPanel");
+        cardLayout.show(cardPanel, "studentCreditTuitionPanel");
     }
 
     // Utility methods

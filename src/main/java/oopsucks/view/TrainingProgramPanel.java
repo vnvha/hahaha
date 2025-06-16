@@ -146,7 +146,12 @@ public class TrainingProgramPanel extends JPanel {
 
     private void loadCourseData() {
         try {
-            new LoadCourseDataCommand(this, tableModel, userDAO, courseDAO, clazzDAO, gradeDAO, true).execute();
+            new LoadCourseDataCommand(
+                tableModel,
+                userDAO, courseDAO, clazzDAO, gradeDAO,
+                true,
+                studentID
+            ).execute();
         } catch (Exception e) {
             getResultLabel().setText("Lỗi: " + e.getMessage());
         }
@@ -225,8 +230,8 @@ public class TrainingProgramPanel extends JPanel {
         }
 
         // Tạo và thêm TuitionFeePanel
-        CreditStudentTuitionFeePanel studentCreditTuitionPanel = new CreditStudentTuitionFeePanel(studentID, cardPanel, cardLayout, tuitionFeeDAO, userDAO);
-        cardPanel.add(studentCreditTuitionPanel, "studentCreditTuitionPanel");
+        StudentTuitionFeePanel studentTuitionPanel = new StudentTuitionFeePanel(studentID, cardPanel, cardLayout, new TuitionFeeDAO(), userDAO, false);
+        cardPanel.add(studentTuitionPanel, "studentCreditTuitionPanel");
         cardLayout.show(cardPanel, "studentCreditTuitionPanel");
     }
 
