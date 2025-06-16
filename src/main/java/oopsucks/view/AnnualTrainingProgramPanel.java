@@ -199,9 +199,9 @@ public class AnnualTrainingProgramPanel extends JPanel {
         }
 
         // Tạo và thêm TuitionFeePanel
-        AnnualStudentTuitionFeePanel annualStudentTuitionPanel = new AnnualStudentTuitionFeePanel(studentID, cardPanel, cardLayout, annualTuitionFeeDAO, userDAO);
-        cardPanel.add(annualStudentTuitionPanel, "annualStudentTuitionPanel");
-        cardLayout.show(cardPanel, "annualStudentTuitionPanel");
+        StudentTuitionFeePanel studentTuitionPanel = new StudentTuitionFeePanel(studentID, cardPanel, cardLayout, new TuitionFeeDAO(), userDAO, true);
+        cardPanel.add(studentTuitionPanel, "studentCreditTuitionPanel");
+        cardLayout.show(cardPanel, "studentCreditTuitionPanel");
     }
 
     // Utility methods

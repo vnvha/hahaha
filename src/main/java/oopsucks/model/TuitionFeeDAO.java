@@ -80,81 +80,36 @@ public class TuitionFeeDAO {
         }
     }
 
-    public int calculateSemesterCredits(String studentId, Integer semester) {
-        UserDAO userDAO = new UserDAO();
-        Student student = userDAO.getStudent(studentId);
-        if (student == null) {
-            throw new IllegalArgumentException("Không tìm thấy sinh viên với ID: " + studentId);
+    public Double getCreditFeeByMajor(String major) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Query<Double> query = session.createQuery(
+                "SELECT creditFee FROM MajorCreditFees WHERE major = :major", Double.class);
+            query.setParameter("major", major);
+            return query.uniqueResultOptional().orElseThrow(() -> 
+                new IllegalArgumentException("Không tìm thấy phí tín chỉ cho ngành: " + major));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Lỗi khi lấy phí tín chỉ cho ngành " + major + ": " + e.getMessage(), e);
         }
-
-        ClazzDAO clazzDAO = new ClazzDAO();
-        List<Clazz> clazzes = clazzDAO.getClazzesByStudentAndSemester(student, semester);
-        int totalChargeableCredits = 0;
-
-        for (Clazz clazz : clazzes) {
-            Course course = clazz.getCourse();
-            if (course != null) {
-            	totalChargeableCredits += course.getChargeableCredits();
-            }
-        }
-        return totalChargeableCredits;
     }
 
     public TuitionFee calculateAndSaveTuitionFee(String studentId, Integer semester) {
         try {
-            int totalChargeableCredits = calculateSemesterCredits(studentId, semester);
-            if (totalChargeableCredits <= 0) {
-                System.out.println("Không có tín chỉ nào được đăng ký cho sinh viên " + studentId + " trong kỳ " + semester);
-                return null;
-            }
-
-            TuitionFee existingFee = getTuitionFeeByStudentAndSemester(studentId, semester);
-            if (existingFee != null) {
-                existingFee.setTotalChargeableCredits(totalChargeableCredits);
-                existingFee.setCreditFeeByMajor(studentId);
-                if (saveTuitionFee(existingFee)) {
-                    return existingFee;
-                } else {
-                    System.err.println("Lỗi khi lưu học phí cho sinh viên " + studentId + " kỳ " + semester);
-                    return null;
-                }
-            } else {
-                TuitionFee tuitionFee = new TuitionFee(studentId, semester, totalChargeableCredits);
-                if (saveTuitionFee(tuitionFee)) {
-                    return tuitionFee;
-                } else {
-                    System.err.println("Lỗi khi lưu học phí cho sinh viên " + studentId + " kỳ " + semester);
-                    return null;
-                }
-            }
-        } catch (IllegalArgumentException e) {
+            CalculateTuitionFeeCommand command = new CalculateTuitionFeeCommand(studentId, semester);
+            return command.execute();
+        } catch (CommandException e) {
             System.err.println("Lỗi khi tính học phí: " + e.getMessage());
-            return null;
-        } catch (Exception e) {
-            System.err.println("Lỗi không xác định: " + e.getMessage());
             return null;
         }
     }
 
     public TuitionFee calculateAndSaveTuitionFee(String studentId, Integer semester, Double creditFee) {
-        int totalChargeableCredits = calculateSemesterCredits(studentId, semester);
-
-        if (totalChargeableCredits > 0) {
-            TuitionFee existingFee = getTuitionFeeByStudentAndSemester(studentId, semester);
-
-            if (existingFee != null) {
-                existingFee.setCreditFee(creditFee);
-                existingFee.setTotalChargeableCredits(totalChargeableCredits);
-                saveTuitionFee(existingFee);
-                return existingFee;
-            } else {
-                TuitionFee tuitionFee = new TuitionFee(studentId, semester, creditFee, totalChargeableCredits);
-                saveTuitionFee(tuitionFee);
-                return tuitionFee;
-            }
+        try {
+            CalculateTuitionFeeCommand command = new CalculateTuitionFeeCommand(studentId, semester, creditFee);
+            return command.execute();
+        } catch (CommandException e) {
+            System.err.println("Lỗi khi tính học phí: " + e.getMessage());
+            return null;
         }
-
-        System.out.println("Không có tín chỉ nào được đăng ký cho sinh viên " + studentId + " trong kỳ " + semester);
-        return null;
     }
+
 }

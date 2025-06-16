@@ -86,7 +86,9 @@ public class StudentPanel extends JPanel {
         }
         
         if (student instanceof YearBasedStudent) {
-            JButton trainingProgramButton1 = new JButton("Chương trình đào tạo");
+
+        	
+        	JButton trainingProgramButton1 = new JButton("Chương trình đào tạo");
             trainingProgramButton1.setFont(buttonFont);
             trainingProgramButton1.setBackground(new Color(70, 130, 180));
             trainingProgramButton1.setForeground(Color.WHITE);
