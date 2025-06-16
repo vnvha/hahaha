@@ -124,7 +124,12 @@ public class AnnualTrainingProgramPanel extends JPanel {
 
     private void loadCourseData() {
         try {
-            new LoadCourseDataCommand(this, tableModel, userDAO, courseDAO, clazzDAO, gradeDAO, false).execute();
+            new LoadCourseDataCommand(
+                tableModel,
+                userDAO, courseDAO, clazzDAO, gradeDAO,
+                false,
+                studentID 
+            ).execute();
         } catch (Exception e) {
             getResultLabel().setText("Lỗi: " + e.getMessage());
         }

@@ -1,37 +1,35 @@
 package oopsucks.controller;
 
 import oopsucks.model.*;
-import oopsucks.view.AnnualTrainingProgramPanel;
-import oopsucks.view.TrainingProgramPanel;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.util.List;
 
 public class LoadCourseDataCommand extends BaseCommand<Void> {
-    private final JPanel panel;
     private final DefaultTableModel tableModel;
     private final UserDAO userDAO;
     private final CourseDAO courseDAO;
     private final ClazzDAO clazzDAO;
     private final GradeDAO gradeDAO;
     private final boolean isCreditBasedSystem;
+    private final String studentID;
 
-    public LoadCourseDataCommand(JPanel panel, DefaultTableModel tableModel,
+    public LoadCourseDataCommand(DefaultTableModel tableModel,
                                  UserDAO userDAO, CourseDAO courseDAO, ClazzDAO clazzDAO, GradeDAO gradeDAO,
-                                 boolean isCreditBasedSystem) {
-        this.panel = panel;
+                                 boolean isCreditBasedSystem,
+                                 String studentID) {
         this.tableModel = tableModel;
         this.userDAO = userDAO;
         this.courseDAO = courseDAO;
         this.clazzDAO = clazzDAO;
         this.gradeDAO = gradeDAO;
         this.isCreditBasedSystem = isCreditBasedSystem;
+        this.studentID = studentID;
     }
 
     @Override
     protected Void doExecute() throws CommandException {
         tableModel.setRowCount(0);
-        String studentID = getStudentID();
         Student student = userDAO.getStudent(studentID);
         if (student == null) {
             throw new CommandException("Không thể tải thông tin sinh viên");
@@ -107,8 +105,8 @@ public class LoadCourseDataCommand extends BaseCommand<Void> {
 
     @Override
     public boolean validate() {
-        return panel != null && tableModel != null && userDAO != null && courseDAO != null && 
-               getStudentID() != null && !getStudentID().trim().isEmpty();
+        return tableModel != null && userDAO != null && courseDAO != null &&
+               studentID != null && !studentID.trim().isEmpty();
     }
 
     private void updateTotalCredits(CreditBasedStudent student, int totalCreditsEarned) {
@@ -118,14 +116,5 @@ public class LoadCourseDataCommand extends BaseCommand<Void> {
 
     private String formatGrade(Float grade) {
         return grade != null ? String.format("%.2f", grade) : "";
-    }
-
-    private String getStudentID() {
-        if (panel instanceof AnnualTrainingProgramPanel) {
-            return ((AnnualTrainingProgramPanel) panel).studentID();
-        } else if (panel instanceof TrainingProgramPanel) {
-            return ((TrainingProgramPanel) panel).studentID();
-        }
-        return null;
     }
 }
