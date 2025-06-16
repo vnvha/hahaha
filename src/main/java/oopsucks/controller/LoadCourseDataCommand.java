@@ -41,8 +41,6 @@ public class LoadCourseDataCommand extends BaseCommand<Void> {
             throw new CommandException("Không có khóa học nào để hiển thị");
         }
 
-        int totalCreditsEarned = 0;
-
         for (Course course : allCourses) {
             if (!course.getInstitute().equals(studentInstitute)) {
                 continue;
@@ -77,10 +75,6 @@ public class LoadCourseDataCommand extends BaseCommand<Void> {
                 rowData[baseIndex + 2] = formatGrade(bestGrade.getTotalScore());
                 rowData[baseIndex + 3] = bestGrade.getLetterGrade();
                 rowData[baseIndex + 4] = formatGrade(bestGrade.getGradePoint());
-
-                if (isCreditBasedSystem && bestGrade.getLetterGrade() != null && !bestGrade.getLetterGrade().equals("F")) {
-                    totalCreditsEarned += course.getCreditNumber();
-                }
             } else {
                 rowData[baseIndex] = "";
                 rowData[baseIndex + 1] = "";
@@ -96,10 +90,6 @@ public class LoadCourseDataCommand extends BaseCommand<Void> {
             tableModel.addRow(rowData);
         }
 
-        if (isCreditBasedSystem && student instanceof CreditBasedStudent) {
-            updateTotalCredits((CreditBasedStudent) student, totalCreditsEarned);
-        }
-
         return null;
     }
 
@@ -107,11 +97,6 @@ public class LoadCourseDataCommand extends BaseCommand<Void> {
     public boolean validate() {
         return tableModel != null && userDAO != null && courseDAO != null &&
                studentID != null && !studentID.trim().isEmpty();
-    }
-
-    private void updateTotalCredits(CreditBasedStudent student, int totalCreditsEarned) {
-        student.setTotalCredits(totalCreditsEarned);
-        userDAO.updateStudent(student);
     }
 
     private String formatGrade(Float grade) {
