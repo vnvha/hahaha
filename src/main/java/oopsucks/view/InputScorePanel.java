@@ -3,6 +3,7 @@ package oopsucks.view;
 import oopsucks.model.*;
 import oopsucks.controller.InputScoreCommand;
 import oopsucks.controller.CommandException;
+import oopsucks.controller.CalculateTotalCreditsCommand;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -121,6 +122,9 @@ public class InputScorePanel extends JPanel {
         List<Grade> gradesToSave = new ArrayList<>();
         InputScoreCommand command = new InputScoreCommand(gradesToSave); // Khởi tạo command với gradesToSave
 
+        // Collect unique student IDs for credit update
+        List<String> updatedStudentIds = new ArrayList<>();
+
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             String studentId = (String) tableModel.getValueAt(i, 0);
             String midtermStr = tableModel.getValueAt(i, 2).toString().trim();
@@ -152,10 +156,29 @@ public class InputScorePanel extends JPanel {
             grade.setMidtermScore(midterm);
             grade.setFinalScore(finalScore);
             gradesToSave.add(grade);
+
+            if (!updatedStudentIds.contains(studentId)) {
+                updatedStudentIds.add(studentId);
+            }
         }
 
         try {
             command.execute(); // Gọi execute thay vì saveScores
+
+            // Call CalculateTotalCreditsCommand for each updated student
+            // You may want to get DAO instances from a central place (e.g., AppContext), here assumed as static getters
+            UserDAO userDAO = new UserDAO();
+            CourseDAO courseDAO = new CourseDAO();
+            GradeDAO gradeDAO = new GradeDAO();
+            for (String studentId : updatedStudentIds) {
+                CalculateTotalCreditsCommand calcCmd = new CalculateTotalCreditsCommand(userDAO, courseDAO, gradeDAO, studentId);
+                try {
+                    calcCmd.execute();
+                } catch (Exception e) {
+                    System.err.println(e);
+                }
+            }
+
             showNotification("Đã lưu tất cả điểm thành công!", 3000);
             refreshTable();
         } catch (CommandException ex) {
